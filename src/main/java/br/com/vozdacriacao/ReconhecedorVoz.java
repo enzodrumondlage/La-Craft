@@ -20,10 +20,12 @@ public final class ReconhecedorVoz {
         return CompletableFuture.supplyAsync(()->{
             try{
                 if(modelo==null)modelo=new Model(preparar().toString());
-                try(Recognizer r=new Recognizer(modelo,48000f)){
+                try(Recognizer r=new Recognizer(modelo,16000f)){
                     StringJoiner texto=new StringJoiner(" ");
-                    for(int off=0;off<pcm.length;off+=4800){
-                        short[] parte=Arrays.copyOfRange(pcm,off,Math.min(off+4800,pcm.length));
+                    for(int off=0;off+2<pcm.length;off+=4800){
+                        int n=Math.min(4800,pcm.length-off)/3;
+                        short[] parte=new short[n];
+                        for(int i=0;i<n;i++){int j=off+3*i;parte[i]=(short)(((int)pcm[j]+pcm[j+1]+pcm[j+2])/3);}
                         try{if(r.acceptWaveForm(parte,parte.length))texto.add(extrair(r.getResult()));}
                         finally{Arrays.fill(parte,(short)0);}
                     }
@@ -39,13 +41,22 @@ public final class ReconhecedorVoz {
     private static String extrair(String json){return JsonParser.parseString(json).getAsJsonObject().get("text").getAsString().trim();}
     private static Path preparar() throws IOException{
         Path base=FabricLoader.getInstance().getGameDir().resolve("config/lacraft/voz").toAbsolutePath().normalize();
+        try(InputStream in=ReconhecedorVoz.class.getResourceAsStream("/vozdacriacao/modelo-pt.zip")){
+            if(in==null)throw new IOException("Modelo português ausente no JAR.");
+            return prepararModelo(base,in);
+        }
+    }
+    private static boolean modeloValido(Path p){
+        return Files.isRegularFile(p.resolve("final.mdl"))||Files.isRegularFile(p.resolve("am/final.mdl"));
+    }
+    static Path prepararModelo(Path base,InputStream in) throws IOException{
+        base=base.toAbsolutePath().normalize();
         Path destino=base.resolve(NOME), pronto=destino.resolve(".lacraft-pronto");
-        if(Files.isRegularFile(pronto)&&Files.isRegularFile(destino.resolve("am/final.mdl")))return destino;
+        if(Files.isRegularFile(pronto)&&modeloValido(destino))return destino;
         Files.createDirectories(base);
         Path temp=Files.createTempDirectory(base,"modelo-");
         try{
-            try(InputStream in=ReconhecedorVoz.class.getResourceAsStream("/vozdacriacao/modelo-pt.zip")){
-                if(in==null)throw new IOException("Modelo português ausente no JAR.");
+            {
                 try(ZipInputStream zip=new ZipInputStream(in)){
                     long total=0;ZipEntry e;int entradas=0;byte[] buffer=new byte[8192];
                     while((e=zip.getNextEntry())!=null){
@@ -61,7 +72,7 @@ public final class ReconhecedorVoz {
                 }
             }
             Path extraido=temp.resolve(NOME);
-            if(!Files.isRegularFile(extraido.resolve("am/final.mdl")))throw new IOException("Modelo inválido");
+            if(!modeloValido(extraido))throw new IOException("Modelo inválido");
             Files.writeString(extraido.resolve(".lacraft-pronto"),"0.3");
             if(Files.exists(destino))throw new IOException("Modelo local incompleto; remova config/lacraft/voz/"+NOME+" e tente novamente");
             Files.move(extraido,destino);

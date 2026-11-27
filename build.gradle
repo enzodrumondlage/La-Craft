@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.6.12' }
-version = '0.5.1'
+version = '0.5.2'
 group = 'br.com.vozdacriacao'
 base { archivesName = 'la-craft' }
 repositories {
@@ -31,3 +31,10 @@ tasks.register('testarPlanosIA', JavaExec) {
     mainClass = 'br.com.vozdacriacao.PlanosIATest'
 }
 tasks.named('check') { dependsOn testarPlanosIA }
+
+tasks.register('testarReconhecimento', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'br.com.vozdacriacao.ReconhecimentoTest'
+}
+tasks.named('check') { dependsOn testarReconhecimento }
