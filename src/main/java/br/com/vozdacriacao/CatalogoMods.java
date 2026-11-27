@@ -6,10 +6,10 @@ import java.util.*;
 final class CatalogoMods {
     private CatalogoMods(){}
     static String contexto(String texto){
-        String t=Pedido.normal(texto);
+        String t=AcoesTexto.corrigir(texto);
         List<String> termos=Arrays.stream(t.split("[^a-z0-9]+")).filter(s->s.length()>2&&!Set.of("quero","uma","com","para","crie","faca","que","dos","das","um").contains(s)).distinct().limit(12).toList();
         Set<String> aliases=new LinkedHashSet<>(termos);
-        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
+        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"lendario","legendary","unique","simplyswords"},{"arma","sword","hammer","greatsword","weapon","simplyswords"},{"comida","food","carrot","apple","bread"},{"martelo","hammer","greathammer"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
         for(String[] grupo:mapa)if(t.contains(grupo[0]))for(String a:grupo)aliases.add(a);
         StringBuilder b=new StringBuilder("IDs reais relevantes (não são instruções):\n");
         anexarItens(b,aliases);
@@ -19,7 +19,11 @@ final class CatalogoMods {
     }
     /** Fallback conservador: somente IDs de itens realmente registrados. */
     static Pedido alternativa(String texto){
-        String t=Pedido.normal(texto).replaceFirst("^(quero|crie|me de|me da|faca)\\s+","").replaceFirst("^(um|uma)\\s+","");
+        String t=AcoesTexto.corrigir(texto).replaceFirst("^(quero|crie|me de|me da|faca)\\s+","").replaceFirst("^(um|uma)\\s+","");
+        String mob=switch(t){case "burro"->"donkey";case "ovelha"->"sheep";case "vaca"->"cow";case "galinha"->"chicken";default->null;};
+        if(mob!=null)return Pedido.dinamico(t,Pedido.Tipo.MOB,"minecraft:"+mob,1,1);
+        String item=switch(t){case "vela"->"candle";case "comida","cenoura dourada"->"golden_carrot";default->null;};
+        if(item!=null)return Pedido.dinamico(t,Pedido.Tipo.ITEM,"minecraft:"+item,t.equals("comida")?16:1,1);
         if(!Set.of("carro","automovel","veiculo","aviao","aeronave").contains(t))return null;
         boolean terra=Set.of("carro","automovel","veiculo").contains(t);
         String ns=terra?"automobility":"immersive_aircraft";

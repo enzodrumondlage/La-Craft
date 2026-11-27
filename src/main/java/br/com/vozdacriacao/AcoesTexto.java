@@ -3,15 +3,21 @@ import java.util.*;
 import java.util.regex.*;
 /** Ações simples sem inferência; pedidos compostos passam pelo planejador. */
 final class AcoesTexto {
+    static String corrigir(String frase){
+        String t=Pedido.normal(frase);
+        String[][] pares={{"teremoto|terremotu|terramoto","terremoto"},{"furacau|furacaoo|furacao","furacao"},{"manção|mancao|manssao","mansao"},{"dragau|dragaoo","dragao"},{"giganti","gigante"},{"metioro|metioros|meteoros","meteoros"},{"tsunamy|tsuname","tsunami"},{"aviao","aviao"}};
+        for(String[] p:pares)t=t.replaceAll("(?<![a-z0-9_:/.-])(?:"+p[0]+")(?![a-z0-9_:/.-])",p[1]);
+        return t;
+    }
     static Pedido interpretar(String frase){
-        String t=Pedido.normal(frase).replaceFirst("^lacraft:\\s*","").replaceFirst("^(quero|faca|deixe|coloque)\\s+","").replaceFirst("^(ficar|que fique)\\s+","").trim();
+        String t=corrigir(frase).replaceFirst("^lacraft:\\s*","").replaceFirst("^(quero|faca|deixe|coloque|crie|invoque)\\s+","").replaceFirst("^(ficar|que fique)\\s+","").trim();
         Pedido carro=CarroSpec.interpretar(frase);if(carro!=null)return carro;
-        if(t.matches("^(?:um )?(tsunami|furacao|tornado)(?: por [0-9]{1,2} segundos?)?$")){
-            String tipo=t.contains("tsunami")?"onda":"redemoinho";
+        if(t.matches("^(?:um )?(tsunami|furacao|tornado|terremoto|buraco negro|chuva de meteoros)(?: por [0-9]{1,2} segundos?)?$")){
+            String tipo=t.contains("tsunami")?"onda":t.contains("terremoto")?"tremor":t.contains("buraco negro")?"gravidade":t.contains("meteoros")?"meteoros":"redemoinho";
             Matcher dur=Pattern.compile("por ([0-9]{1,2}) segundos?").matcher(t);
             int segundos=dur.find()?Integer.parseInt(dur.group(1)):10;
             if(segundos<1||segundos>30)throw new IllegalArgumentException("Evento: 1 a 30 segundos");
-            return new Pedido(tipo.equals("onda")?"Tsunami visual":"Furacão visual",80,Pedido.Tipo.FENOMENO,List.of(),tipo,1,segundos);
+            return new Pedido(switch(tipo){case "onda"->"Tsunami";case "tremor"->"Terremoto";case "gravidade"->"Buraco negro";case "meteoros"->"Chuva de meteoros";default->"Furacão";},80,Pedido.Tipo.FENOMENO,List.of(),tipo,1,segundos);
         }
         String hora=switch(t){case "dia","amanhecer","manha","nascer do sol"->"0";case "meio-dia","meio dia"->"6000";case "tarde"->"9000";case "por do sol","entardecer"->"12000";case "noite","anoitecer"->"13000";case "meia-noite","meia noite"->"18000";case "madrugada"->"22000";default->null;};
         if(hora!=null)return Pedido.acao("Horário",Pedido.Tipo.TEMPO,hora,1,1);

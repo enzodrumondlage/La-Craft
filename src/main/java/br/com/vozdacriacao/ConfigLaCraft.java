@@ -30,7 +30,7 @@ public final class ConfigLaCraft {
     public boolean sugar=true;
     public int velocidadeSugador=3;
     public int velocidadeConstrucao=8;
-    public String provedor="CATALOGO";
+    public String provedor="OLLAMA";
     public String modelo="qwen2.5:3b";
     public String chaveApi="";
     public boolean permitirNuvem=false;

@@ -15,7 +15,7 @@ public final class IAConstrucoes {
     private static final HttpClient HTTP=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
     private static final Set<String> BLOCOS=Set.of("stone_bricks","cobblestone","oak_planks","spruce_planks","birch_planks","glass","obsidian","quartz_block","bricks","sandstone","white_concrete","black_concrete","red_concrete","blue_concrete","light_blue_concrete","green_concrete","yellow_concrete","orange_concrete","purple_concrete","pink_concrete","brown_terracotta","terracotta","gold_block","iron_block","sea_lantern","glowstone","white_wool","brown_wool","black_wool","moss_block","grass_block");
     private static final String SISTEMA="""
-        Planeje desejos fictícios para Minecraft, em português.
+        Planeje desejos fictícios para Minecraft, em português. Interprete erros de escrita e de transcrição usando contexto. Nunca transforme negação em autorização; se o desejo estiver incompleto, retorne caixas vazias. Prefira IDs do catálogo.
         Responda somente um objeto JSON: {"nome":"nome curto","caixas":[{"x1":-2,"y1":0,"z1":-2,"x2":2,"y2":4,"z2":2,"bloco":"stone_bricks","oco":true}]}.
         Use até 64 caixas, no máximo 1500 voxels únicos. Coordenadas inteiras x,z entre -6 e 6, y de 0 a 20, mínimos antes dos máximos.
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
@@ -28,7 +28,7 @@ public final class IAConstrucoes {
         Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
         Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
-        Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno visual sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho; duração 1 a 30 segundos.
+        Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos.
         Para arquitetura personalizada prefira tipo arquitetura: {"nome":"Casa","tipo":"arquitetura","caixas":[{"x1":-8,"y1":0,"z1":-8,"x2":8,"y2":0,"z2":8,"bloco":"smooth_stone","oco":false}]}.
         Para arquitetura use até 96 caixas, x/z de -24 a 24, y de 0 a 24, até 10000 blocos. Use caixas de paredes, pisos e telhados separadas, deixando vãos para portas e escadas. Bloco air remove voxels do plano, nunca do mundo. Inclua móveis e iluminação de acordo com o pedido; cama_pe e cama_cabeca devem ser vizinhas no eixo Z, porta_baixo e porta_cima na mesma coluna. Não declare cômodos que não existem. Para desejos não suportados devolva caixas vazias.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
@@ -115,7 +115,7 @@ public final class IAConstrucoes {
             }
             if(tipo.equals("voo"))return new Pedido(nome,120,Pedido.Tipo.VOO,List.of(),"duracao",plano.has("duracao")?num(plano,"duracao",1,600):300,1);
             if(tipo.equals("carro"))return CarroSpec.pedido(plano.get("cor").getAsString());
-            if(tipo.equals("fenomeno")){String forma=plano.get("forma").getAsString();if(!Set.of("onda","redemoinho").contains(forma))throw new IllegalArgumentException("Fenômeno inválido");return new Pedido(nome,80,Pedido.Tipo.FENOMENO,List.of(),forma,1,num(plano,"duracao",1,30));}
+            if(tipo.equals("fenomeno")){String forma=plano.get("forma").getAsString();if(!Set.of("onda","redemoinho","tremor","gravidade","meteoros").contains(forma))throw new IllegalArgumentException("Fenômeno inválido");return new Pedido(nome,80,Pedido.Tipo.FENOMENO,List.of(),forma,1,num(plano,"duracao",1,30));}
             if(tipo.equals("planta"))return PlantaFlexivel.planejar(new PlantaFlexivel.Spec(num(plano,"quartos",0,8),num(plano,"banheiros",0,8),bool(plano,"cozinha"),bool(plano,"sala"),bool(plano,"garagem"),bool(plano,"piscina"),bool(plano,"jardim"),plano.get("estilo").getAsString()));
             if(tipo.equals("residencia")){
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");

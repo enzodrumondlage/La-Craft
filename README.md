@@ -57,3 +57,6 @@ Automobility 0.4.2: carro com dados de frame, wheels e engine de acordo com Auto
 
 ### 0.9.2 experimental
 Perfil FPS e prévia opcional; minimapas e efeitos pesados removidos do manifesto; Revelationary e Modonomicon obrigatórios; política de spawn seletivo para criaturas especiais em ServerWorld e tentativa de interceptação na geração de chunks. Entidades autorizadas recebem tag persistente. Ollama passa a planejar também residências e aceita arquitetura por caixas com vãos e mobiliário; não executa fallback silencioso quando a IA falha. Ainda não é 1.0.0: não há testes de cliente, geração universal de modelos/texturas/animações ou garantia de interceptar todos os caminhos de spawn de outros mods.
+
+### 0.9.3 experimental
+Correções explícitas de transcrição comuns, busca por IDs reais via /lacraftbuscar, resolução direta de poucos itens/mobs simples sem API, Ollama como padrão em novas instalações. Aviso de matéria pendente. Fenômenos com movimento de entidades e partículas limitadas: onda, redemoinho, tremor, gravidade e meteoros, sem dano permanente ao terreno. Perfil retira interfaces opcionais e alguns utilitários redundantes; conteúdo de mundo preservado. Testes reais de FPS, voz e animação continuam pendentes.

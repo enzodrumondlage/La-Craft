@@ -70,6 +70,11 @@ public final class VozDaCriacao implements ModInitializer {
         ServerTickEvents.END_SERVER_TICK.register(VozDaCriacao::tick);
         CommandRegistrationCallback.EVENT.register((d,a,e)->{
             d.register(literal("lacraft").then(argument("pedido",StringArgumentType.greedyString()).executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),StringArgumentType.getString(c,"pedido")))));
+            d.register(literal("lacraftbuscar").then(argument("termo",StringArgumentType.greedyString()).executes(c->{
+                String termo=StringArgumentType.getString(c,"termo");if(termo.length()>120)return 0;
+                var p=c.getSource().getPlayerOrThrow();String resultado=CatalogoMods.contexto(termo);
+                for(String linha:resultado.split("\\n"))p.sendMessage(Text.literal(linha.length()>1800?linha.substring(0,1800)+"...":linha),false);return 1;
+            })));
             d.register(literal("vozteste").executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),"fonte")));
             d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.fila.clear();if(s.obra!=null){MateriaState.obter(c.getSource().getServer()).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;}AcoesMundo.cancelar(p);s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
         });
@@ -78,6 +83,8 @@ public final class VozDaCriacao implements ModInitializer {
         Sessao s=sessao(p);
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null){p.sendMessage(Text.literal("§eNão é possível criar agora: construção em andamento ou sem permissão."),true);return 0;}
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
+        String corrigido=AcoesTexto.corrigir(texto);
+        if(!corrigido.equals(Pedido.normal(texto))){p.sendMessage(Text.literal("§bInterpretei: "+corrigido),false);}
         if(Set.of("desfaca","desfazer","desfaca a ultima criacao","desfaca meu ultimo desejo","desfaca a ultima construcao").contains(Pedido.normal(texto))){
             if(s.ultimaObra==null||!s.ultimaObra.desfazer(p)){p.sendMessage(Text.literal("§eNão foi possível desfazer: construção alterada, inventário ocupado ou mundo diferente."),false);return 0;}
             s.ultimaObra=null;p.sendMessage(Text.literal("§aÚltima construção removida."),false);return 1;
@@ -87,12 +94,13 @@ public final class VozDaCriacao implements ModInitializer {
         try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){if(IAConstrucoes.ativo())pedido=null;else{p.sendMessage(Text.literal("§ePedido não suportado pelo modo offline: "+ex.getMessage()),true);return 0;}}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
         Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
+        if(recurso!=null){s.pedido=recurso;hud(server,p);return 1;}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA&&!IAConstrucoes.ativo()){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
             if(s.gerando){p.sendMessage(Text.literal("§eJá existe uma criação sendo planejada."),true);return 0;}
-            var futuro=IAConstrucoes.planejar(texto,CatalogoMods.contexto(texto));
+            var futuro=IAConstrucoes.planejar(corrigido,CatalogoMods.contexto(corrigido));
             if(futuro==null){p.sendMessage(Text.literal("§eIA ocupada. Tente novamente."),true);return 0;}
             s.pedido=null;s.gerando=true;long geracao=++s.geracao;hud(server,p);
             futuro.whenComplete((plano,erro)->server.execute(()->{
@@ -144,6 +152,7 @@ public final class VozDaCriacao implements ModInitializer {
                 }else {s.fila.clear();p.sendMessage(Text.literal("§eAção indisponível ou espaço insuficiente. Etapas restantes canceladas; esta ação não foi cobrada."),false);}
                 hud(server,p);
             }
+            if(s.pedido!=null&&s.obra==null&&ConfigLaCraft.obter().coletarMateria&&m.saldo(p.getUuid())<s.pedido.custo()&&t%100==0)p.sendMessage(Text.literal("§eFaltam "+(s.pedido.custo()-m.saldo(p.getUuid()))+" de matéria. G para coletar ou /lacancelar."),true);
             if(t%20==0||s.ativo||s.obra!=null)hud(server,p);
         }
     }

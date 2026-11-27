@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.6.12' }
-version = '0.9.2'
+version = '0.9.3'
 group = 'br.com.vozdacriacao'
 base { archivesName = 'la-craft' }
 repositories {
