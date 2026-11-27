@@ -15,6 +15,9 @@ public final class ConfigLaCraft {
     public boolean hud=true;
     public boolean particulas=true;
     public boolean sons=true;
+    public boolean chatDesejos=true;
+    public boolean chatTodos=false;
+    public boolean vozNuvem=false;
     public boolean voz=true;
     public boolean sugar=true;
     public int velocidadeSugador=3;

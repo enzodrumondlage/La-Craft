@@ -79,7 +79,7 @@ public final class VozCliente implements ClientModInitializer {
             if(pcm.length<4800){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eSem áudio suficiente. Configure o microfone e a ativação do Simple Voice Chat."),true);}
             else {
                 processando=true;long g=++geracao;
-                ReconhecedorVoz.transcrever(pcm).whenComplete((frase,erro)->mc.execute(()->{
+                (ConfigLaCraft.obter().vozNuvem&&ConfigLaCraft.obter().permitirNuvem&&!ConfigLaCraft.chave(ConfigLaCraft.obter()).isBlank()?VozNuvem.transcrever(pcm):ReconhecedorVoz.transcrever(pcm)).whenComplete((frase,erro)->mc.execute(()->{
                     if(g!=geracao)return;
                     processando=false;
                     if(mc.player==null||!ClientPlayNetworking.canSend(VozDaCriacao.PEDIR))return;

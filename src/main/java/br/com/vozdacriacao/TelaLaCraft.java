@@ -38,6 +38,10 @@ public final class TelaLaCraft extends Screen {
             int metade=(w-4)/2;
             var s=botao(x,y+110,metade,"Absorção: "+rascunho.velocidadeSugador,()->{rascunho.velocidadeSugador=rascunho.velocidadeSugador%6+1;atualizar();});s.active=!remoto;
             var c=botao(x+metade+4,y+110,w-metade-4,"Construção: "+rascunho.velocidadeConstrucao,()->{rascunho.velocidadeConstrucao=rascunho.velocidadeConstrucao>=16?2:rascunho.velocidadeConstrucao+2;atualizar();});c.active=!remoto;
+        }else if(pagina==2){
+            var chat=botao(x,y,w,"Desejos pelo chat: "+sn(rascunho.chatDesejos),()->{rascunho.chatDesejos=!rascunho.chatDesejos;atualizar();});chat.active=!remoto;
+            var todos=botao(x,y+22,w,"Interpretar todo o chat: "+sn(rascunho.chatTodos),()->{rascunho.chatTodos=!rascunho.chatTodos;atualizar();});todos.active=!remoto;
+            botao(x,y+44,w,"Transcrição OpenAI (envia áudio): "+sn(rascunho.vozNuvem),()->{rascunho.vozNuvem=!rascunho.vozNuvem;atualizar();});
         }else{
             var prov=botao(x,y,w,"IA: "+rascunho.provedor,()->{
                 capturar();
@@ -57,7 +61,7 @@ public final class TelaLaCraft extends Screen {
             var apagar=botao(x,y+116,w,"Apagar chave salva",()->{if(chave!=null)chave.setText("");rascunho.chaveApi="";atualizar();});apagar.active=!remoto;
         }
         int rodape=height-26,metade=(w-8)/3;
-        botao(x,rodape,metade,pagina==0?"IA >":"< Jogo",()->{capturar();pagina=1-pagina;atualizar();});
+        botao(x,rodape,metade,pagina==0?"IA >":pagina==1?"Chat >":"< Jogo",()->{capturar();pagina=(pagina+1)%3;atualizar();});
         botao(x+metade+4,rodape,metade,"Salvar",()->{capturar();if(ConfigLaCraft.salvar(rascunho)){close();}else{aviso="Erro ao salvar.";atualizar();}});
         botao(x+2*(metade+4),rodape,w-2*(metade+4),"Cancelar",this::close);
     }

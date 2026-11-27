@@ -46,6 +46,20 @@ public final class VozDaCriacao implements ModInitializer {
                 pedir(server,p,texto);
             });
         });
+        net.fabricmc.fabric.api.message.v1.ServerMessageEvents.CHAT_MESSAGE.register((msg,p,params)->{
+            if(!ConfigLaCraft.obter().chatDesejos||!ServerPlayNetworking.canSend(p,HUD))return;
+            String texto=msg.getSignedContent();
+            if(texto.length()>240||(!ConfigLaCraft.obter().chatTodos&&!Pedido.pedidoChat(texto)))return;
+            var server=p.getServer();
+            if(server==null)return;
+            server.execute(()->{
+                if(server.getPlayerManager().getPlayer(p.getUuid())!=p)return;
+                Sessao s=sessao(p);int t=server.getTicks();
+                if(t-s.ultimoPedido<40)return;
+                s.ultimoPedido=t;pedir(server,p,texto);
+            });
+        });
+        PoderesLaCraft.registrar();
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());
@@ -62,7 +76,8 @@ public final class VozDaCriacao implements ModInitializer {
         Sessao s=sessao(p);
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null)return 0;
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
-        Pedido pedido=Pedido.interpretar(texto);
+        Pedido pedido;
+        try{pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         boolean estrutura=pedido==null||switch(pedido.tipo()){case CASA,TORRE,FOGUETE,CASTELO,CAPIVARA,VOXEL->true;default->false;};
         if(estrutura&&IAConstrucoes.ativo()){
             if(s.gerando){p.sendMessage(Text.literal("§eJá existe uma criação sendo planejada."),true);return 0;}
@@ -82,7 +97,7 @@ public final class VozDaCriacao implements ModInitializer {
             return 1;
         }
         s.geracao++;s.gerando=false;
-        if(pedido==null){p.sendMessage(Text.literal("§ePedido desconhecido. Tente casa, castelo, torre, foguete, capivara, burros, arco ou armadura."),false);return 0;}
+        if(pedido==null){p.sendMessage(Text.literal("§ePedido não reconhecido. Ative uma IA generativa no menu ou use IDs de itens/mobs."),false);return 0;}
         s.pedido=pedido;hud(server,p);return 1;
     }
     private static void tick(MinecraftServer server){
@@ -105,13 +120,13 @@ public final class VozDaCriacao implements ModInitializer {
             var m=MateriaState.obter(server);
             if(s.pedido!=null&&s.obra==null&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&(!ConfigLaCraft.obter().coletarMateria||m.saldo(p.getUuid())>=s.pedido.custo())){
                 var pedido=s.pedido;s.pedido=null;
-                if(!ConfigLaCraft.obter().coletarMateria)pedido=new Pedido(pedido.nome(),0,pedido.tipo(),pedido.celulas());
+                if(!ConfigLaCraft.obter().coletarMateria)pedido=pedido.gratuito();
                 var resultado=MotorCriacao.iniciar(p,pedido);
                 if(resultado.sucesso()){
                     m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();
                     som(p.getServerWorld(),p.getBlockPos(),s.obra==null?3:1);
                     p.sendMessage(Text.literal("§aMaterializando: "+pedido.nome()),false);
-                }else p.sendMessage(Text.literal("§eEspaço insuficiente. Nada foi cobrado; faça o pedido em área aberta."),false);
+                }else p.sendMessage(Text.literal("§ePedido indisponível ou espaço insuficiente. Nada foi cobrado."),false);
                 hud(server,p);
             }
             if(t%20==0||s.ativo)hud(server,p);

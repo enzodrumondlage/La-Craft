@@ -28,5 +28,8 @@
   },
   "suggests": {
     "modmenu": ">=7.2.2"
-  }
+  },
+  "mixins": [
+    "lacraft.mixins.json"
+  ]
 }

@@ -1,0 +1,12 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "br.com.vozdacriacao.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "GiganteRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

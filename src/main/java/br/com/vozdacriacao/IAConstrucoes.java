@@ -15,11 +15,14 @@ public final class IAConstrucoes {
     private static final HttpClient HTTP=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
     private static final Set<String> BLOCOS=Set.of("stone_bricks","cobblestone","oak_planks","spruce_planks","birch_planks","glass","obsidian","quartz_block","bricks","sandstone","white_concrete","black_concrete","red_concrete","blue_concrete","light_blue_concrete","green_concrete","yellow_concrete","orange_concrete","purple_concrete","pink_concrete","brown_terracotta","terracotta","gold_block","iron_block","sea_lantern","glowstone","white_wool","brown_wool","black_wool","moss_block","grass_block");
     private static final String SISTEMA="""
-        Planeje apenas construções decorativas fictícias para Minecraft, em português.
+        Planeje desejos fictícios para Minecraft, em português.
         Responda somente um objeto JSON: {"nome":"nome curto","caixas":[{"x1":-2,"y1":0,"z1":-2,"x2":2,"y2":4,"z2":2,"bloco":"stone_bricks","oco":true}]}.
         Use até 64 caixas, no máximo 1500 voxels únicos. Coordenadas inteiras x,z entre -6 e 6, y de 0 a 20, mínimos antes dos máximos.
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
-        Não gere comandos, código, itens, entidades ou mecanismos reais; se não for construção decorativa, devolva caixas vazias.
+        Para itens existentes use {"nome":"nome","tipo":"item","id":"minecraft:diamond","quantidade":8}.
+        Para mobs existentes use {"nome":"nome","tipo":"mob","id":"minecraft:piglin","quantidade":1,"escala":3}; escala de 1 a 4, quantidade 1 a 8.
+        Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada.
+        Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
     private IAConstrucoes(){}
@@ -67,6 +70,24 @@ public final class IAConstrucoes {
         String nome=plano.get("nome").getAsString().replaceAll("[\\p{Cntrl}§]","").trim();
         if(nome.isEmpty())nome="Construção IA";
         nome=nome.substring(0,Math.min(48,nome.length()));
+        if(plano.has("tipo")){
+            String tipo=plano.get("tipo").getAsString();
+            if(tipo.equals("item")||tipo.equals("mob")){
+                Pedido.Tipo t=tipo.equals("item")?Pedido.Tipo.ITEM:Pedido.Tipo.MOB;
+                return Pedido.dinamico(nome,t,plano.get("id").getAsString(),num(plano,"quantidade",1,t==Pedido.Tipo.MOB?8:64),t==Pedido.Tipo.MOB?num(plano,"escala",1,4):1);
+            }
+            Pedido p=switch(tipo){
+                case "voo"->new Pedido(nome,120,Pedido.Tipo.VOO);
+                case "velocidade"->new Pedido(nome,60,Pedido.Tipo.VELOCIDADE);
+                case "salto"->new Pedido(nome,60,Pedido.Tipo.SALTO);
+                case "invisivel"->new Pedido(nome,80,Pedido.Tipo.INVISIVEL);
+                case "laser"->new Pedido(nome,150,Pedido.Tipo.LASER);
+                case "espada"->new Pedido(nome,180,Pedido.Tipo.ESPADA);
+                default->null;
+            };
+            if(p!=null)return p;
+            if(!tipo.equals("voxel"))throw new IllegalArgumentException("Tipo desconhecido");
+        }
         JsonArray caixas=plano.getAsJsonArray("caixas");
         if(caixas.isEmpty()||caixas.size()>64)throw new IllegalArgumentException("Quantidade de caixas inválida");
         record Pos(int x,int y,int z){}

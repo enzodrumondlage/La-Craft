@@ -37,6 +37,7 @@ public final class MotorCriacao {
     }
     public static Resultado iniciar(ServerPlayerEntity p,Pedido pedido){
         ServerWorld w=p.getServerWorld();
+        if(PoderesLaCraft.especial(pedido.tipo()))return new Resultado(PoderesLaCraft.executar(p,pedido),null);
         if(pedido.tipo()==Pedido.Tipo.FONTE){w.spawnParticles(ParticleTypes.END_ROD,p.getX(),p.getY()+1,p.getZ(),70,1,1,1,.12);return new Resultado(true,null);}
         if(pedido.tipo()==Pedido.Tipo.ARCO){
             ItemStack item=new ItemStack(Items.BOW);item.setCustomName(Text.literal("Arco mágico"));item.addEnchantment(Enchantments.INFINITY,1);item.addEnchantment(Enchantments.UNBREAKING,3);
