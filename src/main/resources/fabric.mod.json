@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "vozdacriacao",
+  "version": "${version}",
+  "name": "La Craft — Voz da Criação",
+  "description": "Colete matéria e materialize pedidos no Minecraft.",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "br.com.vozdacriacao.VozDaCriacao"
+    ],
+    "client": [
+      "br.com.vozdacriacao.VozCliente"
+    ],
+    "voicechat": [
+      "br.com.vozdacriacao.VozPlugin"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "1.20.1",
+    "java": ">=17",
+    "fabric-api": "*",
+    "voicechat": ">=2.5.0"
+  }
+}
