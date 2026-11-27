@@ -24,3 +24,10 @@ processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand(version: project.version) }
 }
+
+tasks.register('testarPlanosIA', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'br.com.vozdacriacao.PlanosIATest'
+}
+tasks.named('check') { dependsOn testarPlanosIA }
