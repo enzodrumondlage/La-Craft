@@ -28,6 +28,7 @@ public final class IAConstrucoes {
         Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
         Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
+        Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno visual sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho; duração 1 a 30 segundos.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -110,6 +111,8 @@ public final class IAConstrucoes {
                 return new Pedido(nome,50,tipo.equals("chuva_mob")?Pedido.Tipo.CHUVA_MOB:Pedido.Tipo.CHUVA_ITEM,List.of(),id,num(plano,"quantidade",1,32),num(plano,"duracao",1,30));
             }
             if(tipo.equals("voo"))return new Pedido(nome,120,Pedido.Tipo.VOO,List.of(),"duracao",plano.has("duracao")?num(plano,"duracao",1,600):300,1);
+            if(tipo.equals("carro"))return CarroSpec.pedido(plano.get("cor").getAsString());
+            if(tipo.equals("fenomeno")){String forma=plano.get("forma").getAsString();if(!Set.of("onda","redemoinho").contains(forma))throw new IllegalArgumentException("Fenômeno inválido");return new Pedido(nome,80,Pedido.Tipo.FENOMENO,List.of(),forma,1,num(plano,"duracao",1,30));}
             if(tipo.equals("planta"))return PlantaFlexivel.planejar(new PlantaFlexivel.Spec(num(plano,"quartos",0,8),num(plano,"banheiros",0,8),bool(plano,"cozinha"),bool(plano,"sala"),bool(plano,"garagem"),bool(plano,"piscina"),bool(plano,"jardim"),plano.get("estilo").getAsString()));
             if(tipo.equals("residencia")){
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");

@@ -22,7 +22,7 @@ final class AcoesMundo {
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->eventos.clear());
     }
     static void cancelar(ServerPlayerEntity p){eventos.remove(p.getUuid());}
-    static boolean especial(Pedido.Tipo t){return t==Pedido.Tipo.TEMPO||t==Pedido.Tipo.CLIMA||t==Pedido.Tipo.CHUVA_ITEM||t==Pedido.Tipo.CHUVA_MOB;}
+    static boolean especial(Pedido.Tipo t){return t==Pedido.Tipo.TEMPO||t==Pedido.Tipo.CLIMA||t==Pedido.Tipo.CHUVA_ITEM||t==Pedido.Tipo.CHUVA_MOB||t==Pedido.Tipo.FENOMENO;}
     private static boolean autorizado(ServerPlayerEntity p){return p.hasPermissionLevel(2)||p.getServer().isHost(p.getGameProfile());}
     static boolean executar(ServerPlayerEntity p,Pedido a){
         ServerWorld w=p.getServerWorld();
@@ -37,6 +37,10 @@ final class AcoesMundo {
             return true;
         }
         if(eventos.containsKey(p.getUuid())||eventos.size()>=16)return false;
+        if(a.tipo()==Pedido.Tipo.FENOMENO){
+            if(!Set.of("onda","redemoinho").contains(a.alvo())||a.escala()<1||a.escala()>30)return false;
+            eventos.put(p.getUuid(),new Chuva(w,p.getBlockPos().offset(p.getHorizontalFacing(),10),a,p.getServer().getTicks(),0));return true;
+        }
         Identifier id=Identifier.tryParse(a.alvo());if(id==null||a.quantidade()<1||a.quantidade()>32||a.escala()<1||a.escala()>30)return false;
         if(a.tipo()==Pedido.Tipo.CHUVA_ITEM){
             if(!Registries.ITEM.containsId(id)||!PoderesLaCraft.itemPermitido(id))return false;
@@ -49,8 +53,20 @@ final class AcoesMundo {
         while(it.hasNext()){
             var e=it.next();var c=e.getValue();var p=s.getPlayerManager().getPlayer(e.getKey());var a=c.pedido();
             int idade=s.getTicks()-c.inicio();
-            if(p==null||!p.isAlive()||p.isSpectator()||!p.getAbilities().allowModifyWorld||p.getServerWorld()!=c.mundo()||idade>=a.escala()*20||c.feitos()>=a.quantidade()){
-                if(p!=null)p.sendMessage(Text.literal("§bEvento encerrado: "+c.feitos()+" de "+a.quantidade()+" aparições."),false);it.remove();continue;
+            if(p==null||!p.isAlive()||p.isSpectator()||!p.getAbilities().allowModifyWorld||p.getServerWorld()!=c.mundo()||idade>=a.escala()*20||(a.tipo()!=Pedido.Tipo.FENOMENO&&c.feitos()>=a.quantidade())){
+                if(p!=null)p.sendMessage(Text.literal(a.tipo()==Pedido.Tipo.FENOMENO?"§bFenômeno visual encerrado.":"§bEvento encerrado: "+c.feitos()+" de "+a.quantidade()+" aparições."),false);it.remove();continue;
+            }
+            if(a.tipo()==Pedido.Tipo.FENOMENO){
+                var w=c.mundo();var o=c.centro();double fase=idade/20.0;
+                if(w.isChunkLoaded(o.getX()>>4,o.getZ()>>4)){
+                    if(a.alvo().equals("onda"))for(int x=-5;x<=5;x++)for(int y=0;y<6;y++){
+                        double z=o.getZ()-5+(fase/a.escala())*10+Math.sin(x*.35+y*.2);
+                        w.spawnParticles(ParticleTypes.SPLASH,o.getX()+x,o.getY()+y,z,2,.15,.15,.15,.02);
+                    }else for(int j=0;j<40;j++){
+                        double h=(j%10)*.65,ang=j*.8+fase*5,r=.8+h*.45;
+                        w.spawnParticles(ParticleTypes.CLOUD,o.getX()+Math.cos(ang)*r,o.getY()+h,o.getZ()+Math.sin(ang)*r,1,.05,.05,.05,.01);
+                    }
+                }continue;
             }
             if(c.feitos()>=Math.max(1,(idade*a.quantidade())/(a.escala()*20)))continue;
             var w=c.mundo();var r=w.getRandom();BlockPos pos=c.centro().add(r.nextInt(9)-4,10,r.nextInt(9)-4);

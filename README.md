@@ -51,3 +51,6 @@ Reparo conservador de texto UTF-8 lido como Windows-1252/Latin-1, microfone dire
 
 ### 0.9.0 experimental
 Planta modular de um andar com até 12 ambientes, contagens de banheiros e quartos separadas, piscina elevada, cozinha, sala, garagem e jardim; mobiliário de blocos vanilla. Prévia isométrica giratória de amostra dos voxels reais na HUD e contador de blocos. Bloqueio do item Automobility sem componentes, ainda sem adaptador de montagem. Pins de Sodium/Indium e correção do resolvedor. Não é geração 3D universal e não foi validada em jogo.
+
+### 0.9.1 experimental
+Automobility 0.4.2: carro com dados de frame, wheels e engine de acordo com AutomobileItem/AutomobilePrefab oficiais, escolha de cor. Fenômenos visuais de onda e redemoinho temporários, sem destruição. Desfazer a última construção da sessão apenas se os blocos continuam intactos e os inventários vazios. Sem garantia de execução em jogo; geração 3D universal ainda não implementada.

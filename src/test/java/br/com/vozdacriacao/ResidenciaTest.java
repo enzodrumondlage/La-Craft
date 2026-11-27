@@ -14,6 +14,7 @@ public final class ResidenciaTest {
         check(Pedido.pedidoChat("mansão com dois quartos e camas"));
         check(!Pedido.pedidoChat("oi tudo bem"));
         check(!AudioLimpo.preparar(new short[4800]));short[] onda=new short[4800];for(int i=0;i<onda.length;i++)onda[i]=(short)(200*Math.sin(i*.2));check(AudioLimpo.preparar(onda));
+        check(AcoesTexto.interpretar("quero um carro azul").tipo()==Pedido.Tipo.CARRO);check(AcoesTexto.interpretar("quero um carro azul").alvo().equals("blue"));check(AcoesTexto.interpretar("tsunami por 15 segundos").escala()==15);
         System.out.println("Residência, chat e áudio: testes aprovados");
     }
 }

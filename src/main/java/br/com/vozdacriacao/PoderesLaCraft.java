@@ -22,7 +22,7 @@ public final class PoderesLaCraft {
     private static final Map<UUID,Integer> voando=new HashMap<>();
     private static final Set<String> PROIBIDOS=Set.of("command_block","chain_command_block","repeating_command_block","command_block_minecart","structure_block","structure_void","jigsaw","barrier","debug_stick","light","knowledge_book");
     static boolean itemPermitido(Identifier id){return !id.toString().equals("automobility:automobile")&&!PROIBIDOS.contains(id.getPath())&&Registries.ITEM.get(id)!=Items.AIR;}
-    static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO->true;default->false;};}
+    static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO,CARRO->true;default->false;};}
     static void registrar(){
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->{if(h.player.getCommandTags().contains(VOO))revogar(h.player);});
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->revogar(h.player));
@@ -61,6 +61,16 @@ public final class PoderesLaCraft {
     static boolean executar(ServerPlayerEntity p,Pedido pedido){
         ServerWorld w=p.getServerWorld();
         switch(pedido.tipo()){
+            case CARRO -> {
+                if(!CarroSpec.CORES.contains(pedido.alvo()))return false;
+                Identifier id=new Identifier("automobility","automobile");
+                if(!Registries.ITEM.containsId(id))return false;
+                var mod=net.fabricmc.loader.api.FabricLoader.getInstance().getModContainer("automobility");
+                if(mod.isEmpty()||!mod.get().getMetadata().getVersion().getFriendlyString().startsWith("0.4.2"))return false;
+                ItemStack s=new ItemStack(Registries.ITEM.get(id));var n=s.getOrCreateSubNbt("Automobile");
+                n.putString("frame","automobility:standard_"+pedido.alvo());n.putString("wheels","automobility:standard");n.putString("engine","automobility:iron");
+                dar(p,s);return true;
+            }
             case ARTEFATO -> {return ArtefatoLaCraft.entregar(p,pedido);}
             case VOO -> {
                 int segundos=pedido.alvo().equals("duracao")?Math.max(1,Math.min(600,pedido.quantidade())):300;

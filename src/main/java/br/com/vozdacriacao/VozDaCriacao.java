@@ -24,7 +24,7 @@ public final class VozDaCriacao implements ModInitializer {
     public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir"),SOM=id("som"),PREVIA=id("previa");
     private static final Map<UUID,Sessao> sessoes=new HashMap<>();
     private static final Set<Block> PERMITIDOS=Set.of(Blocks.DIRT,Blocks.GRASS_BLOCK,Blocks.COARSE_DIRT,Blocks.STONE,Blocks.COBBLESTONE,Blocks.SAND,Blocks.RED_SAND,Blocks.GRAVEL,Blocks.ANDESITE,Blocks.DIORITE,Blocks.GRANITE,Blocks.DEEPSLATE,Blocks.NETHERRACK,Blocks.END_STONE);
-    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;final Deque<Pedido> fila=new ArrayDeque<>();MotorCriacao.Obra obra;Pedido ultimaPrevia;int previaAte;}
+    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;final Deque<Pedido> fila=new ArrayDeque<>();MotorCriacao.Obra obra,ultimaObra;Pedido ultimaPrevia;int previaAte;}
     private static Identifier id(String n){return new Identifier("vozdacriacao",n);}
     private static Sessao sessao(ServerPlayerEntity p){return sessoes.computeIfAbsent(p.getUuid(),k->new Sessao());}
     @Override public void onInitialize(){
@@ -78,11 +78,14 @@ public final class VozDaCriacao implements ModInitializer {
         Sessao s=sessao(p);
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null){p.sendMessage(Text.literal("§eNão é possível criar agora: construção em andamento ou sem permissão."),true);return 0;}
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
+        if(Set.of("desfaca","desfazer","desfaca a ultima criacao","desfaca meu ultimo desejo","desfaca a ultima construcao").contains(Pedido.normal(texto))){
+            if(s.ultimaObra==null||!s.ultimaObra.desfazer(p)){p.sendMessage(Text.literal("§eNão foi possível desfazer: construção alterada, inventário ocupado ou mundo diferente."),false);return 0;}
+            s.ultimaObra=null;p.sendMessage(Text.literal("§aÚltima construção removida."),false);return 1;
+        }
         if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
         Pedido pedido;
         try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
-        if(Set.of("carro","um carro","quero um carro","crie um carro","automovel").contains(Pedido.normal(texto))){p.sendMessage(Text.literal("§eAutomobility exige montagem de chassis, motor e rodas; entrega invisível bloqueada nesta versão."),false);return 0;}
         Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
@@ -117,7 +120,7 @@ public final class VozDaCriacao implements ModInitializer {
                 if(!p.isAlive()||p.getServerWorld()!=s.obra.mundo||p.isSpectator()||!p.getAbilities().allowModifyWorld){
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;s.fila.clear();
                 }else if(s.obra.tick(p)){
-                    boolean completa=s.obra.completa();if(!completa)s.fila.clear();
+                    boolean completa=s.obra.completa();if(completa)s.ultimaObra=s.obra;else s.fila.clear();
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
                     som(p.getServerWorld(),p.getBlockPos(),completa?3:4);
                     p.sendMessage(Text.literal(completa?"§aDesejo realizado!":"§eConstrução interrompida por obstáculos."),true);

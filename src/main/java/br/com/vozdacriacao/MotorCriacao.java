@@ -32,6 +32,18 @@ public final class MotorCriacao {
             }
             return i>=voxels.size();
         }
+        boolean desfazer(ServerPlayerEntity p){
+            if(!completa()||p.getServerWorld()!=mundo||p.isSpectator()||!p.getAbilities().allowModifyWorld)return false;
+            for(Voxel v:voxels){
+                BlockPos pos=v.pos();
+                if(!mundo.isChunkLoaded(pos.getX()>>4,pos.getZ()>>4)||!mundo.canPlayerModifyAt(p,pos)||!mundo.getBlockState(pos).equals(v.estado())||!mundo.getOtherEntities(null,new Box(pos)).isEmpty())return false;
+                var be=mundo.getBlockEntity(pos);
+                if(be instanceof net.minecraft.inventory.Inventory inv){if(!inv.isEmpty())return false;}
+                else if(be!=null&&!(be instanceof net.minecraft.block.entity.BedBlockEntity))return false;
+            }
+            for(int n=voxels.size()-1;n>=0;n--)mundo.setBlockState(voxels.get(n).pos(),Blocks.AIR.getDefaultState(),Block.NOTIFY_LISTENERS);
+            return true;
+        }
         int progresso(){return colocados;}
         int total(){return voxels.size();}
         boolean completa(){return colocados==voxels.size();}
