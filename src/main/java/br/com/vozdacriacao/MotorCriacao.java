@@ -32,6 +32,8 @@ public final class MotorCriacao {
             }
             return i>=voxels.size();
         }
+        int progresso(){return colocados;}
+        int total(){return voxels.size();}
         boolean completa(){return colocados==voxels.size();}
         int reembolso(){return custo-(int)Math.ceil(custo*(colocados/(double)voxels.size()));}
     }
@@ -50,7 +52,8 @@ public final class MotorCriacao {
             }return new Resultado(true,null);
         }
         boolean residencia=pedido.tipo()==Pedido.Tipo.RESIDENCIA||pedido.tipo()==Pedido.Tipo.CASA;
-        BlockPos origem=p.getBlockPos().offset(p.getHorizontalFacing(),residencia?13:9);
+        int raio=pedido.celulas().stream().mapToInt(c->Math.max(Math.abs(c.x()),Math.abs(c.z()))).max().orElse(0);
+        BlockPos origem=p.getBlockPos().offset(p.getHorizontalFacing(),Math.max(residencia?13:9,raio+4));
         if(pedido.tipo()==Pedido.Tipo.BURROS){
             int n=0;
             for(int x=-2;x<=2;x++)for(int z=-1;z<=1;z++){
@@ -93,7 +96,7 @@ public final class MotorCriacao {
             default -> {return new Resultado(false,null);}
         }
         var v=mapa.entrySet().stream().map(e->new Voxel(e.getKey(),e.getValue())).sorted(Comparator.comparingInt(a->a.pos().getY())).toList();
-        if(v.isEmpty()||v.size()> (residencia?3500:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
+        if(v.isEmpty()||v.size()> (residencia?10000:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
         return new Resultado(true,new Obra(w,v,pedido.custo(),residencia));
     }
     private static BlockState estadoResidencia(String b){

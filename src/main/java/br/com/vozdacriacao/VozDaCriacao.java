@@ -21,10 +21,10 @@ import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
 
 public final class VozDaCriacao implements ModInitializer {
-    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir"),SOM=id("som");
+    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir"),SOM=id("som"),PREVIA=id("previa");
     private static final Map<UUID,Sessao> sessoes=new HashMap<>();
     private static final Set<Block> PERMITIDOS=Set.of(Blocks.DIRT,Blocks.GRASS_BLOCK,Blocks.COARSE_DIRT,Blocks.STONE,Blocks.COBBLESTONE,Blocks.SAND,Blocks.RED_SAND,Blocks.GRAVEL,Blocks.ANDESITE,Blocks.DIORITE,Blocks.GRANITE,Blocks.DEEPSLATE,Blocks.NETHERRACK,Blocks.END_STONE);
-    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;final Deque<Pedido> fila=new ArrayDeque<>();MotorCriacao.Obra obra;}
+    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;final Deque<Pedido> fila=new ArrayDeque<>();MotorCriacao.Obra obra;Pedido ultimaPrevia;int previaAte;}
     private static Identifier id(String n){return new Identifier("vozdacriacao",n);}
     private static Sessao sessao(ServerPlayerEntity p){return sessoes.computeIfAbsent(p.getUuid(),k->new Sessao());}
     @Override public void onInitialize(){
@@ -71,7 +71,7 @@ public final class VozDaCriacao implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((d,a,e)->{
             d.register(literal("lacraft").then(argument("pedido",StringArgumentType.greedyString()).executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),StringArgumentType.getString(c,"pedido")))));
             d.register(literal("vozteste").executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),"fonte")));
-            d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.fila.clear();AcoesMundo.cancelar(p);s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
+            d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.fila.clear();if(s.obra!=null){MateriaState.obter(c.getSource().getServer()).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;}AcoesMundo.cancelar(p);s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
         });
     }
     private static int pedir(MinecraftServer server,ServerPlayerEntity p,String texto){
@@ -82,6 +82,7 @@ public final class VozDaCriacao implements ModInitializer {
         Pedido pedido;
         try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
+        if(Set.of("carro","um carro","quero um carro","crie um carro","automovel").contains(Pedido.normal(texto))){p.sendMessage(Text.literal("§eAutomobility exige montagem de chassis, motor e rodas; entrega invisível bloqueada nesta versão."),false);return 0;}
         Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
@@ -133,13 +134,13 @@ public final class VozDaCriacao implements ModInitializer {
                 if(!ConfigLaCraft.obter().coletarMateria)pedido=pedido.gratuito();
                 var resultado=MotorCriacao.iniciar(p,pedido);
                 if(resultado.sucesso()){
-                    m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();
+                    m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();s.ultimaPrevia=pedido;s.previaAte=t+100;enviarPrevia(p,pedido);
                     som(p.getServerWorld(),p.getBlockPos(),s.obra==null?3:1);
                     p.sendMessage(Text.literal("§aMaterializando: "+pedido.nome()),false);
                 }else {s.fila.clear();p.sendMessage(Text.literal("§eAção indisponível ou espaço insuficiente. Etapas restantes canceladas; esta ação não foi cobrada."),false);}
                 hud(server,p);
             }
-            if(t%20==0||s.ativo)hud(server,p);
+            if(t%20==0||s.ativo||s.obra!=null)hud(server,p);
         }
     }
     private static void sugar(MinecraftServer server,ServerPlayerEntity p){
@@ -173,8 +174,16 @@ public final class VozDaCriacao implements ModInitializer {
             var b=PacketByteBufs.create();b.writeBlockPos(pos);b.writeByte(tipo);ServerPlayNetworking.send(q,SOM,b);
         }
     }
+    private static void enviarPrevia(ServerPlayerEntity p,Pedido pedido){
+        if(!ServerPlayNetworking.canSend(p,PREVIA))return;
+        var b=PacketByteBufs.create();b.writeString(pedido.nome(),80);
+        var celulas=pedido.celulas();int passo=Math.max(1,(celulas.size()+799)/800);
+        b.writeVarInt((celulas.size()+passo-1)/passo);
+        for(int i=0;i<celulas.size();i+=passo){var c=celulas.get(i);b.writeInt(c.x());b.writeInt(c.y());b.writeInt(c.z());b.writeString(c.bloco(),120);}
+        ServerPlayNetworking.send(p,PREVIA,b);
+    }
     private static void hud(MinecraftServer server,ServerPlayerEntity p){
         if(!ServerPlayNetworking.canSend(p,HUD))return;
-        Sessao s=sessao(p);var b=PacketByteBufs.create();b.writeVarInt(MateriaState.obter(server).saldo(p.getUuid()));b.writeVarInt(s.pedido==null||!ConfigLaCraft.obter().coletarMateria?0:s.pedido.custo());b.writeString(s.pedido==null?(s.gerando?"IA planejando...":(s.obra==null?"Nenhum":"Construindo...")):s.pedido.nome(),80);ServerPlayNetworking.send(p,HUD,b);
+        Sessao s=sessao(p);var b=PacketByteBufs.create();b.writeVarInt(MateriaState.obter(server).saldo(p.getUuid()));b.writeVarInt(s.pedido==null||!ConfigLaCraft.obter().coletarMateria?0:s.pedido.custo());b.writeString(s.pedido==null?(s.gerando?"IA planejando...":(s.obra==null?"Nenhum":"Construindo...")):s.pedido.nome(),80);b.writeBoolean(!ConfigLaCraft.obter().coletarMateria);b.writeVarInt(s.obra==null?0:s.obra.progresso());b.writeVarInt(s.obra==null?0:s.obra.total());ServerPlayNetworking.send(p,HUD,b);
     }
 }

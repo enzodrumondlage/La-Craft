@@ -9,7 +9,7 @@ def get(path):
     if path not in CACHE:
         for attempt in range(3):
             try:
-                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.8.4 (GitHub modpack builder)"})
+                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.9.0 (GitHub modpack builder)"})
                 with urllib.request.urlopen(req,timeout=45) as r: CACHE[path]=json.load(r)
                 break
             except (OSError,ValueError):
@@ -70,7 +70,7 @@ def validar():
 validar()
 expansao=[]
 for slug in CFG.get('expansao',[]):
-    saved=chosen.copy(); pins=exact.copy()
+    saved=chosen.copy(); saved_exact=exact.copy()
     try:
         select(slug)
         validar()
@@ -78,7 +78,7 @@ for slug in CFG.get('expansao',[]):
             if not any(x['filename'].endswith('.jar') for x in v['files']): raise ValueError('JAR ausente: '+p['slug'])
         expansao.append({'slug':slug,'status':'incluido'})
     except Exception as e:
-        chosen.clear(); chosen.update(saved); exact.clear(); exact.update(pins); visiting.clear()
+        chosen.clear(); chosen.update(saved); exact.clear(); exact.update(saved_exact); visiting.clear()
         expansao.append({'slug':slug,'status':'omitido','motivo':str(e)})
         print('OMITIDO:',slug,str(e))
 validar()
@@ -98,12 +98,12 @@ for p,v in sorted(chosen.values(),key=lambda a:a[0]["slug"]):
 jar=pathlib.Path(sys.argv[1])
 assert jar.is_file()
 out=pathlib.Path("dist");out.mkdir(exist_ok=True)
-index={"formatVersion":1,"game":"minecraft","versionId":"0.8.4-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
-mrpack=out/"La-Craft-Infinite-0.8.4-EXPANDIDO.mrpack"
+index={"formatVersion":1,"game":"minecraft","versionId":"0.9.0-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
+mrpack=out/"La-Craft-Infinite-0.9.0-EXPANDIDO.mrpack"
 with zipfile.ZipFile(mrpack,"w",zipfile.ZIP_DEFLATED) as z:
     z.writestr("modrinth.index.json",json.dumps(index,ensure_ascii=False,indent=2))
     z.write(jar,"overrides/mods/"+jar.name)
-with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.4-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile(out/"La-Craft-Infinite-0.9.0-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
     z.write(mrpack,mrpack.name)
     z.writestr("expansao.json",json.dumps(expansao,ensure_ascii=False,indent=2))
     z.writestr("mods-lock.json",json.dumps(lock,ensure_ascii=False,indent=2))

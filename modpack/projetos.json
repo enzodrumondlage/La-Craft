@@ -73,11 +73,22 @@
     "macaws-furniture",
     "another-furniture",
     "creeper-overhaul",
-    "enderman-overhaul"
+    "enderman-overhaul",
+    "adorn",
+    "worldedit",
+    "macaws-bridges",
+    "decorative-blocks",
+    "presence-footsteps",
+    "entity-model-features",
+    "entitytexturefeatures",
+    "spectrum",
+    "geckolib"
   ],
   "pins": {
     "fabric-api": "UapVHwiP",
     "structure-pool-api": "y5a2WAp4",
-    "porting_lib": "un3RTcAA"
+    "porting_lib": "un3RTcAA",
+    "sodium": "OihdIimA",
+    "indium": "nQHYSjxO"
   }
 }

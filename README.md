@@ -48,3 +48,6 @@ O menu Chat permite ativar Whisper local. Requer um whisper-server do projeto wh
 
 ### 0.8.4 experimental — voz
 Reparo conservador de texto UTF-8 lido como Windows-1252/Latin-1, microfone direto Java Sound (padrão do Windows, opção na página Chat), indicação de preparação, 250 ms de captura após soltar F e fallback Simple Voice Chat. Sem gravação em disco. Não garante reconhecimento perfeito; testar com microfone real.
+
+### 0.9.0 experimental
+Planta modular de um andar com até 12 ambientes, contagens de banheiros e quartos separadas, piscina elevada, cozinha, sala, garagem e jardim; mobiliário de blocos vanilla. Prévia isométrica giratória de amostra dos voxels reais na HUD e contador de blocos. Bloqueio do item Automobility sem componentes, ainda sem adaptador de montagem. Pins de Sodium/Indium e correção do resolvedor. Não é geração 3D universal e não foi validada em jogo.

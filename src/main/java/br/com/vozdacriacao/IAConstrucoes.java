@@ -27,6 +27,7 @@ public final class IAConstrucoes {
         Tempo: hora 0 a 23999. Clima: limpo, chuva, tempestade; duração 1 a 3600 segundos. Voo: duracao 1 a 600 segundos (opcional).
         Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
         Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
+        Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -109,6 +110,7 @@ public final class IAConstrucoes {
                 return new Pedido(nome,50,tipo.equals("chuva_mob")?Pedido.Tipo.CHUVA_MOB:Pedido.Tipo.CHUVA_ITEM,List.of(),id,num(plano,"quantidade",1,32),num(plano,"duracao",1,30));
             }
             if(tipo.equals("voo"))return new Pedido(nome,120,Pedido.Tipo.VOO,List.of(),"duracao",plano.has("duracao")?num(plano,"duracao",1,600):300,1);
+            if(tipo.equals("planta"))return PlantaFlexivel.planejar(new PlantaFlexivel.Spec(num(plano,"quartos",0,8),num(plano,"banheiros",0,8),bool(plano,"cozinha"),bool(plano,"sala"),bool(plano,"garagem"),bool(plano,"piscina"),bool(plano,"jardim"),plano.get("estilo").getAsString()));
             if(tipo.equals("residencia")){
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");
                 return Residencia.planejar(nome,plano.has("quartos")?num(plano,"quartos",1,4):(plano.get("grande").getAsBoolean()?2:1),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
@@ -152,6 +154,7 @@ public final class IAConstrucoes {
         if(voxels.isEmpty())throw new IllegalArgumentException("Plano vazio");
         return new Pedido(nome,voxels.size(),Pedido.Tipo.VOXEL,List.copyOf(voxels.values()));
     }
+    private static boolean bool(JsonObject o,String k){var e=o.get(k).getAsJsonPrimitive();if(!e.isBoolean())throw new IllegalArgumentException("Campo booleano");return e.getAsBoolean();}
     private static int num(JsonObject o,String k,int min,int max){
         var e=o.get(k).getAsJsonPrimitive();if(!e.isNumber())throw new IllegalArgumentException("Coordenada não numérica");
         int n=e.getAsBigDecimal().intValueExact();if(n<min||n>max)throw new IllegalArgumentException("Coordenada fora do limite");return n;

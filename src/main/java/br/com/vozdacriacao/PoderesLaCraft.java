@@ -21,7 +21,7 @@ public final class PoderesLaCraft {
     static final String VOO="lacraft_voo",GIGANTE="La Craft Gigante ";
     private static final Map<UUID,Integer> voando=new HashMap<>();
     private static final Set<String> PROIBIDOS=Set.of("command_block","chain_command_block","repeating_command_block","command_block_minecart","structure_block","structure_void","jigsaw","barrier","debug_stick","light","knowledge_book");
-    static boolean itemPermitido(Identifier id){return !PROIBIDOS.contains(id.getPath())&&Registries.ITEM.get(id)!=Items.AIR;}
+    static boolean itemPermitido(Identifier id){return !id.toString().equals("automobility:automobile")&&!PROIBIDOS.contains(id.getPath())&&Registries.ITEM.get(id)!=Items.AIR;}
     static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO->true;default->false;};}
     static void registrar(){
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->{if(h.player.getCommandTags().contains(VOO))revogar(h.player);});
@@ -77,7 +77,7 @@ public final class PoderesLaCraft {
             case LASER -> {ItemStack s=new ItemStack(Items.AMETHYST_SHARD);s.setCustomName(Text.literal("§dCetro de luz"));s.getOrCreateNbt().putBoolean("lacraft_luz",true);dar(p,s);return true;}
             case ESPADA -> {ItemStack s=new ItemStack(Items.DIAMOND_SWORD);s.setCustomName(Text.literal("§bEspada da criação"));s.addEnchantment(Enchantments.SHARPNESS,5);s.addEnchantment(Enchantments.UNBREAKING,3);dar(p,s);return true;}
             case ITEM -> {
-                Identifier id=Identifier.tryParse(pedido.alvo());if(id==null||!Registries.ITEM.containsId(id)||PROIBIDOS.contains(id.getPath()))return false;
+                Identifier id=Identifier.tryParse(pedido.alvo());if(id==null||!Registries.ITEM.containsId(id)||!itemPermitido(id))return false;
                 Item item=Registries.ITEM.get(id);if(item==Items.AIR)return false;
                 int restante=pedido.quantidade();while(restante>0){int n=Math.min(restante,item.getMaxCount());dar(p,new ItemStack(item,n));restante-=n;}return true;
             }

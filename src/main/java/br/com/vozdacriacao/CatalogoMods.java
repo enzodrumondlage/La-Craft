@@ -26,7 +26,7 @@ final class CatalogoMods {
         var ids=Registries.ITEM.getIds();
         for(String caminho:terra?List.of("automobile","automobile_assembly"):List.of("biplane","airship")){
             Identifier id=new Identifier(ns,caminho);
-            if(ids.contains(id)&&!caminho.endsWith("assembly"))
+            if(ids.contains(id)&&!terra&&!caminho.endsWith("assembly"))
                 return Pedido.dinamico(terra?"Automóvel":"Aeronave",Pedido.Tipo.ITEM,id.toString(),1,1);
         }
         return null;

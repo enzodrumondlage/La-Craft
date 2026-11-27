@@ -7,6 +7,7 @@ final class Residencia {
     static Pedido interpretar(String frase,int qualidade){
         String t=Pedido.normal(frase).replaceFirst("^lacraft:\\s*","");
         if(!t.matches("^(?:(?:quero|desejo|crie|criar|construa|construir|faca|gere|me de)\\s+)?(?:(?:uma|um|minha)\\s+)?(?:casa|mansao)\\b.*"))return null;
+        Pedido flex=PlantaFlexivel.interpretar(frase);if(flex!=null)return flex;
         boolean grande=Pedido.palavra(t,"mansao|grande|dois quartos|2 quartos");
         int quartos=Pedido.palavra(t,"quatro quartos|4 quartos")?4:Pedido.palavra(t,"tres quartos|3 quartos")?3:Pedido.palavra(t,"um quarto|1 quarto")?1:grande?2:1;
         // Não descartar requisitos extras não implementados.

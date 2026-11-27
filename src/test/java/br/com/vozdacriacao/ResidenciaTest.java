@@ -7,7 +7,8 @@ public final class ResidenciaTest {
         check(a!=null);check(a.custo()==a.celulas().size());check(count(a,"porta_baixo")==1&&count(a,"porta_cima")==1);
         check(count(a,"cama_pe")==1&&count(a,"cama_cabeca")==1);check(count(a,"bau")>=1&&count(a,"crafting_table")==1&&count(a,"fornalha")==1&&count(a,"glass")>0);
         var m=Residencia.interpretar("mansão com dois quartos",4);check(m!=null&&count(m,"cama_pe")==2&&m.celulas().size()<3500);
-        check(Residencia.interpretar("mansão com piscina",4)==null);
+        check(count(Residencia.interpretar("mansão com piscina",4),"water")>0);
+        var flex=Residencia.interpretar("mansão moderna com 4 quartos 2 banheiros piscina cozinha sala garagem jardim",4);check(count(flex,"cama_pe")==4&&count(flex,"cauldron")==2&&count(flex,"water")>0&&count(flex,"fornalha")==1);
         var quatro=Residencia.interpretar("mansão com quatro quartos",4);check(quatro!=null&&count(quatro,"cama_pe")==4&&quatro.celulas().size()<3500);
         check(AcoesTexto.interpretar("madrugada").alvo().equals("22000"));check(AcoesTexto.interpretar("tirar chuva").alvo().equals("limpo"));check(AcoesTexto.interpretar("voar por 15 segundos").quantidade()==15);check(AcoesTexto.interpretar("chuva de esqueletos").alvo().equals("minecraft:skeleton"));
         check(Pedido.pedidoChat("mansão com dois quartos e camas"));
