@@ -1,5 +1,5 @@
 # La Craft — Voz da Criação
-Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.5.0.
+Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.5.1.
 ## Instalação
 Baixe o JAR em Actions > execução bem-sucedida > Artifacts. Instale Fabric API 0.92.2+1.20.1 e Simple Voice Chat 2.5.26. Instale os três JARs no cliente e servidor.
 ## Uso
@@ -19,3 +19,6 @@ O mod funciona sem serviços externos para os pedidos do catálogo. Para estrutu
 
 ## Configurações no jogo
 Instale Mod Menu 7.2.2 para Fabric 1.20.1. Abra Mods > La Craft > botão de configurações. Há duas páginas (Jogo / IA). Coleta de matéria, sugador e velocidades são regras do servidor; em multiplayer remoto o cliente não pode alterá-las. Servidor dedicado: configure config/lacraft.json na própria instalação. A chave da API fica local em texto simples nesse arquivo (não compartilhe ou envie ao GitHub); a interface mascara o campo. É possível usar OPENAI_API_KEY como variável de ambiente. O provedor OpenAI é opcional, requer autorização explícita de envio de texto e pode cobrar; não transmite áudio. Use com autorização do responsável/titular da conta. Ollama e catálogo não exigem chave. O modelo OpenAI padrão é gpt-4o-mini. Não há promessa de acesso gratuito à API.
+
+## Compatibilidade Simple Voice Chat
+A versão do mod de voz inclui o prefixo Minecraft (por exemplo 1.20.1-2.6.22), por isso o Fabric não deve comparar diretamente com 2.5.0. O metadado exige a presença do voicechat e do Minecraft 1.20.1; use uma edição Fabric compatível com Minecraft 1.20.1. A API usada na compilação é 2.5.0; a integração em execução com 2.6.22 ainda precisa ser testada.
