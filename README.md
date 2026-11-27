@@ -60,3 +60,6 @@ Perfil FPS e prévia opcional; minimapas e efeitos pesados removidos do manifest
 
 ### 0.9.3 experimental
 Correções explícitas de transcrição comuns, busca por IDs reais via /lacraftbuscar, resolução direta de poucos itens/mobs simples sem API, Ollama como padrão em novas instalações. Aviso de matéria pendente. Fenômenos com movimento de entidades e partículas limitadas: onda, redemoinho, tremor, gravidade e meteoros, sem dano permanente ao terreno. Perfil retira interfaces opcionais e alguns utilitários redundantes; conteúdo de mundo preservado. Testes reais de FPS, voz e animação continuam pendentes.
+
+### 0.9.4 — auditoria experimental
+O pipeline inspeciona os JARs oficiais do manifesto, SHA-512, tamanho, fabric.mod.json, bibliotecas aninhadas, arquivos de configuração de mixins e predicados de versão do Fabric. O pacote expandido só é publicado após a auditoria. A análise estática não executa os mods nem comprova compatibilidade em jogo. HUD e partículas de absorção corrigidas, testes adicionais de arquitetura e transcrição. Não é a versão final.

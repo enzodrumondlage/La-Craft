@@ -108,7 +108,7 @@ public final class VozDaCriacao implements ModInitializer {
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
                     s.pedido=erro==null?plano:null;
-                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada."),false);
+                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada. Para IA gratuita: Mods > La Craft > IA > OLLAMA."),false);
                     else if(s.pedido!=null)p.sendMessage(Text.literal("§bPlano gerado pela IA: "+s.pedido.nome()),false);
                     else if(s.pedido==null)p.sendMessage(Text.literal("§ePlano indisponível."),false);
 
@@ -130,6 +130,7 @@ public final class VozDaCriacao implements ModInitializer {
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;s.fila.clear();
                 }else if(s.obra.tick(p)){
                     boolean completa=s.obra.completa();if(completa)s.ultimaObra=s.obra;else s.fila.clear();
+                    hud(server,p);
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
                     som(p.getServerWorld(),p.getBlockPos(),completa?3:4);
                     p.sendMessage(Text.literal(completa?"§aDesejo realizado!":"§eConstrução interrompida por obstáculos."),true);

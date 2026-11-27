@@ -35,9 +35,9 @@ public final class VozCliente implements ClientModInitializer {
         sugar=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vozdacriacao.sugar",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_G,"category.vozdacriacao"));
         ClientTickEvents.END_CLIENT_TICK.register(VozCliente::tick);
         ClientPlayConnectionEvents.DISCONNECT.register((h,c)->limpar());
-        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.HUD,(c,h,b,s)->{int m=b.readVarInt(),k=b.readVarInt();String n=b.readString(80);boolean inf=b.isReadable()&&b.readBoolean();int f=b.isReadable()?b.readVarInt():0,tt=b.isReadable()?b.readVarInt():0;c.execute(()->{materia=m;custo=k;pedido=n;ilimitado=inf;feitos=f;total=tt;});});
+        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.HUD,(c,h,b,s)->{int m=b.readVarInt(),k=b.readVarInt();String n=b.readString(80);boolean inf=b.isReadable()&&b.readBoolean();int f=b.isReadable()?b.readVarInt():0,tt=b.isReadable()?b.readVarInt():0;c.execute(()->{materia=m;custo=k;pedido=n;ilimitado=inf;if(total>0&&tt==0){if(feitos>=total)PreviaHud.ate=ticks+100;else PreviaHud.limpar();}feitos=f;total=tt;});});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.PREVIA,(c,h,b,s)->{String n=b.readString(80);int qtd=b.readVarInt();if(qtd<0||qtd>800)return;List<Pedido.Celula> cs=new ArrayList<>();for(int i=0;i<qtd;i++)cs.add(new Pedido.Celula(b.readInt(),b.readInt(),b.readInt(),b.readString(120)));c.execute(()->PreviaHud.receber(n,cs,ticks));});
-        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(ConfigLaCraft.obter().particulas&&fragmentos.size()<250)fragmentos.add(new Fragmento(o,e,id,ticks));});});
+        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(ConfigLaCraft.obter().particulas&&fragmentos.size()<(ConfigLaCraft.obter().perfilFPS==0?24:ConfigLaCraft.obter().perfilFPS==1?80:250))fragmentos.add(new Fragmento(o,e,id,ticks));});});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.SOM,(c,h,b,s)->{
             var pos=b.readBlockPos();int tipo=b.readUnsignedByte();
             c.execute(()->{
@@ -85,7 +85,7 @@ public final class VozCliente implements ClientModInitializer {
             short[] pcm=BufferVoz.finalizar();
             if(microfone!=null){
                 short[] direto=microfone.finalizar();microfone=null;
-                if(direto.length>=12000&&AudioLimpo.preparar(direto)){Arrays.fill(pcm,(short)0);pcm=direto;}
+                if(direto.length>=12000&&nivelSuficiente(direto)){Arrays.fill(pcm,(short)0);pcm=direto;}
                 else {Arrays.fill(direto,(short)0);mc.player.sendMessage(Text.literal("§eMicrofone direto sem áudio suficiente; usando Simple Voice Chat."),false);}
             }
             gravando=false;bloqueio=f;fimGravacao=-1;
@@ -117,8 +117,12 @@ public final class VozCliente implements ClientModInitializer {
             if(alvo==null||idade>=12){it.remove();continue;}
             double t=(idade+1)/12.0;Vec3d pos=fr.origem().lerp(alvo.getPos().add(0,1.2,0),t*t);
             mc.world.addParticle(new BlockStateParticleEffect(ParticleTypes.BLOCK,Block.getStateFromRawId(fr.estado())),pos.x,pos.y,pos.z,0,0,0);
-            mc.world.addParticle(ParticleTypes.END_ROD,pos.x,pos.y,pos.z,0,0,0);
+            if(ConfigLaCraft.obter().perfilFPS!=0)mc.world.addParticle(ParticleTypes.END_ROD,pos.x,pos.y,pos.z,0,0,0);
         }
+    }
+    private static boolean nivelSuficiente(short[] pcm){
+        double soma=0;for(short s:pcm)soma+=(double)s*s;
+        return pcm.length>0&&Math.sqrt(soma/pcm.length)>80;
     }
     private static boolean pressionada(MinecraftClient mc,KeyBinding b){
         InputUtil.Key t=KeyBindingHelper.getBoundKeyOf(b);if(t.getCode()<0)return false;

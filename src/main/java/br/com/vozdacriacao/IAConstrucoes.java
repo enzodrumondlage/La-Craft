@@ -81,7 +81,7 @@ public final class IAConstrucoes {
         if(erro==null)return "A IA não retornou um plano válido.";
         Throwable e=erro;while(e.getCause()!=null&&e.getCause()!=e)e=e.getCause();
         String m=e.getMessage()==null?"":e.getMessage();
-        if(m.contains("HTTP 401")||m.contains("HTTP 403"))return "API sem autorização. Verifique a chave e permissões.";
+        if(m.contains("HTTP 401")||m.contains("HTTP 403"))return "API sem autorização. Se usar Ollama local, selecione OLLAMA em vez de OPENAI; não precisa de chave.";
         if(m.contains("HTTP 429"))return "Limite de uso da API atingido.";
         if(m.contains("HTTP 404"))return "Modelo não encontrado. Confira o modelo escolhido.";
         if(m.contains("HTTP 5"))return "Serviço de IA indisponível.";

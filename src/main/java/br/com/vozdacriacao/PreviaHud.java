@@ -6,17 +6,18 @@ import net.minecraft.client.MinecraftClient;
 final class PreviaHud {
     static List<Pedido.Celula> celulas=List.of();
     static String nome="";
-    static int ate;
-    static void receber(String n,List<Pedido.Celula> c,int t){nome=n;celulas=List.copyOf(c);ate=t+120;}
+    static int ate,raio=1;
+    static void receber(String n,List<Pedido.Celula> c,int t){nome=n;celulas=List.copyOf(c);ate=t+120;raio=Math.max(1,celulas.stream().mapToInt(v->Math.max(Math.abs(v.x()),Math.max(Math.abs(v.z()),v.y()))).max().orElse(1));}
     static void limpar(){celulas=List.of();nome="";ate=0;}
     static int cor(String b){if(b.contains("water"))return 0xff43bde6;if(b.contains("glass"))return 0xff568fba;if(b.contains("grass")||b.contains("poppy"))return 0xff72a65d;if(b.contains("plank")||b.contains("log"))return 0xffa68054;if(b.contains("lantern"))return 0xffffd17c;return 0xffb4c4d0;}
     static void render(DrawContext ctx,int t,int feitos,int total){
-        if(!ConfigLaCraft.obter().previa3d||celulas.isEmpty()||total==0&&t>ate)return;
+        if(total==0&&t>ate){limpar();return;}
+        if(!ConfigLaCraft.obter().previa3d||celulas.isEmpty())return;
         int x=8,y=94,w=214,h=104;
         ctx.fill(x,y,x+w,y+h,0xe0172536);
         var tr=MinecraftClient.getInstance().textRenderer;
         ctx.drawTextWithShadow(tr,nome,x+6,y+5,0xff9bd8ff);
-        int max=celulas.stream().mapToInt(c->Math.max(Math.abs(c.x()),Math.max(Math.abs(c.z()),c.y()))).max().orElse(1);
+        int max=raio;
         double s=Math.max(0.65,Math.min(3,36.0/Math.max(1,max))),ang=t*.025;
         double a=Math.cos(ang),b=Math.sin(ang);
         record P(double depth,int x,int y,int cor){}
