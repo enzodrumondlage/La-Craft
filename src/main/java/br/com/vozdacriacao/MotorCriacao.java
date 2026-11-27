@@ -20,7 +20,7 @@ public final class MotorCriacao {
         final ServerWorld mundo;private final List<Voxel> voxels;private final int custo;private int i,colocados;
         Obra(ServerWorld w,List<Voxel> v,int c){mundo=w;voxels=v;custo=c;}
         boolean tick(ServerPlayerEntity p){
-            for(int n=0;n<8&&i<voxels.size();n++){
+            for(int n=0;n<ConfigLaCraft.obter().velocidadeConstrucao&&i<voxels.size();n++){
                 Voxel v=voxels.get(i++);
                 if(!livre(mundo,p,v.pos()))return true;
                 if(mundo.setBlockState(v.pos(),v.estado(),Block.NOTIFY_ALL)){

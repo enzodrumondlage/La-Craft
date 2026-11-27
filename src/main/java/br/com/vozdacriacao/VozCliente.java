@@ -32,10 +32,10 @@ public final class VozCliente implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(VozCliente::tick);
         ClientPlayConnectionEvents.DISCONNECT.register((h,c)->limpar());
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.HUD,(c,h,b,s)->{int m=b.readVarInt(),k=b.readVarInt();String n=b.readString(80);c.execute(()->{materia=m;custo=k;pedido=n;});});
-        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(fragmentos.size()<250)fragmentos.add(new Fragmento(o,e,id,ticks));});});
+        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(ConfigLaCraft.obter().particulas&&fragmentos.size()<250)fragmentos.add(new Fragmento(o,e,id,ticks));});});
         HudRenderCallback.EVENT.register((ctx,delta)->{
             var mc=MinecraftClient.getInstance();
-            if(mc.player==null||mc.options.hudHidden||!ClientPlayNetworking.canSend(VozDaCriacao.SUGAR))return;
+            if(!ConfigLaCraft.obter().hud||mc.player==null||mc.options.hudHidden||!ClientPlayNetworking.canSend(VozDaCriacao.SUGAR))return;
             int x=8,y=8,l=214;
             ctx.fill(x,y,x+l,y+56,0xCC171B24);
             ctx.drawTextWithShadow(mc.textRenderer,"LA CRAFT • Voz da Criação",x+7,y+6,0x9BD8FF);
@@ -52,7 +52,7 @@ public final class VozCliente implements ClientModInitializer {
         ticks++;
         if(mc.player==null||mc.world==null){limpar();return;}
         boolean habilitado=mc.currentScreen==null&&mc.isWindowFocused();
-        boolean f=habilitado&&pressionada(mc,voz);
+        boolean f=ConfigLaCraft.obter().voz&&habilitado&&pressionada(mc,voz);
         if(!habilitado){BufferVoz.cancelar();gravando=false;bloqueio=true;}
         if(habilitado&&!f)bloqueio=false;
         if(f&&!gravando&&!bloqueio&&!processando&&ClientPlayNetworking.canSend(VozDaCriacao.PEDIR)){BufferVoz.iniciar();gravando=true;inicio=ticks;}

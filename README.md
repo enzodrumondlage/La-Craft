@@ -1,5 +1,5 @@
 # La Craft — Voz da Criação
-Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.4.0.
+Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.5.0.
 ## Instalação
 Baixe o JAR em Actions > execução bem-sucedida > Artifacts. Instale Fabric API 0.92.2+1.20.1 e Simple Voice Chat 2.5.26. Instale os três JARs no cliente e servidor.
 ## Uso
@@ -16,3 +16,6 @@ Modelo: vosk-model-small-pt-0.3 (Apache 2.0), https://alphacephei.com/vosk/model
 
 ## IA generativa de estruturas (opcional)
 O mod funciona sem serviços externos para os pedidos do catálogo. Para estruturas inéditas, um administrador pode instalar Ollama e um modelo local de texto e iniciar o Minecraft/servidor com a variável de ambiente LACRAFT_OLLAMA_MODEL definida para o nome desse modelo local. O mod usa apenas 127.0.0.1:11434; não configure modelos de nuvem. Sem essa configuração não faz requisições HTTP. Em multiplayer, avise os jogadores antes de ativar: as frases reconhecidas serão processadas pelo serviço local do servidor. A IA retorna caixas JSON que são expandidas em até 1500 voxels de uma paleta validada; o custo é calculado pelo servidor. Não executa scripts ou comandos. O reconhecimento por voz não depende do Ollama.
+
+## Configurações no jogo
+Instale Mod Menu 7.2.2 para Fabric 1.20.1. Abra Mods > La Craft > botão de configurações. Há duas páginas (Jogo / IA). Coleta de matéria, sugador e velocidades são regras do servidor; em multiplayer remoto o cliente não pode alterá-las. Servidor dedicado: configure config/lacraft.json na própria instalação. A chave da API fica local em texto simples nesse arquivo (não compartilhe ou envie ao GitHub); a interface mascara o campo. É possível usar OPENAI_API_KEY como variável de ambiente. O provedor OpenAI é opcional, requer autorização explícita de envio de texto e pode cobrar; não transmite áudio. Use com autorização do responsável/titular da conta. Ollama e catálogo não exigem chave. O modelo OpenAI padrão é gpt-4o-mini. Não há promessa de acesso gratuito à API.

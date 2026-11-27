@@ -1,9 +1,10 @@
 plugins { id 'fabric-loom' version '1.6.12' }
-version = '0.4.0'
+version = '0.5.0'
 group = 'br.com.vozdacriacao'
 base { archivesName = 'la-craft' }
 repositories {
     mavenCentral()
+    maven { url = 'https://maven.terraformersmc.com/releases/' }
     maven { url = 'https://maven.fabricmc.net/' }
     maven { url = 'https://maven.maxhenkel.de/repository/public' }
 }
@@ -14,6 +15,7 @@ dependencies {
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.92.2+1.20.1'
     implementation('com.alphacephei:vosk:0.3.45') { transitive = false }
     include 'com.alphacephei:vosk:0.3.45'
+    modImplementation 'com.terraformersmc:modmenu:7.2.2'
     compileOnly 'de.maxhenkel.voicechat:voicechat-api:2.5.0'
 }
 java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17; withSourcesJar() }

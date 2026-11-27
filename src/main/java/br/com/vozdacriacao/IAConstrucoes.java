@@ -10,7 +10,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 /** LLM opcional via serviço local. Somente caixas de voxels validadas, nunca comandos. */
 public final class IAConstrucoes {
-    private static final String MODELO=System.getenv().getOrDefault("LACRAFT_OLLAMA_MODEL","").trim();
     private static final AtomicBoolean OCUPADO=new AtomicBoolean();
     private static final ExecutorService WORK=Executors.newSingleThreadExecutor(r->{Thread t=new Thread(r,"LaCraft-IA");t.setDaemon(true);return t;});
     private static final HttpClient HTTP=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build();
@@ -24,21 +23,38 @@ public final class IAConstrucoes {
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
     private IAConstrucoes(){}
-    public static boolean ativo(){return MODELO.matches("[A-Za-z0-9_.:/-]{1,80}")&&!MODELO.contains("cloud");}
+    public static boolean ativo(){
+        var c=ConfigLaCraft.obter();
+        return c.provedor.equals("OLLAMA")&&!c.modelo.toLowerCase(Locale.ROOT).contains("cloud")||c.provedor.equals("OPENAI")&&c.permitirNuvem&&!ConfigLaCraft.chave(c).isBlank();
+    }
     public static CompletableFuture<Pedido> planejar(String texto){
         if(!ativo()||!OCUPADO.compareAndSet(false,true))return null;
+        final ConfigLaCraft cfg=ConfigLaCraft.obter().copia();
         return CompletableFuture.supplyAsync(()->{
             try{
                 JsonObject req=new JsonObject();
-                req.addProperty("model",MODELO);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS));
+                req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS));
                 req.addProperty("prompt",texto);req.addProperty("stream",false);req.addProperty("format","json");
                 JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",2048);req.add("options",opts);
-                HttpRequest http=HttpRequest.newBuilder(URI.create("http://127.0.0.1:11434/api/generate")).timeout(Duration.ofSeconds(90)).header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(req.toString())).build();
+                boolean nuvem=cfg.provedor.equals("OPENAI");
+                HttpRequest.Builder builder;
+                if(nuvem){
+                    if(!cfg.permitirNuvem)throw new IllegalArgumentException("Nuvem não autorizada");
+                    JsonObject payload=new JsonObject();payload.addProperty("model",cfg.modelo);
+                    JsonArray msgs=new JsonArray();
+                    JsonObject sys=new JsonObject();sys.addProperty("role","system");sys.addProperty("content",SISTEMA+" Blocos: "+String.join(", ",BLOCOS));msgs.add(sys);
+                    JsonObject user=new JsonObject();user.addProperty("role","user");user.addProperty("content",texto);msgs.add(user);payload.add("messages",msgs);
+                    JsonObject formato=new JsonObject();formato.addProperty("type","json_object");payload.add("response_format",formato);
+                    payload.addProperty("max_completion_tokens",2048);req=payload;
+                    builder=HttpRequest.newBuilder(URI.create("https://api.openai.com/v1/chat/completions")).header("Authorization","Bearer "+ConfigLaCraft.chave(cfg));
+                }else builder=HttpRequest.newBuilder(URI.create("http://127.0.0.1:11434/api/generate"));
+                HttpRequest http=builder.timeout(Duration.ofSeconds(90)).header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofString(req.toString())).build();
                 var response=HTTP.send(http,HttpResponse.BodyHandlers.ofInputStream());
                 try(InputStream in=response.body()){
                     if(response.statusCode()!=200)throw new IllegalArgumentException("IA HTTP "+response.statusCode());
                     byte[] b=in.readNBytes(65537);if(b.length>65536)throw new IllegalArgumentException("Resposta muito grande");
-                    String json=JsonParser.parseString(new String(b,StandardCharsets.UTF_8)).getAsJsonObject().get("response").getAsString();
+                    JsonObject body=JsonParser.parseString(new String(b,StandardCharsets.UTF_8)).getAsJsonObject();
+                    String json=nuvem?body.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString():body.get("response").getAsString();
                     return validar(json);
                 }
             }catch(Exception e){throw new CompletionException(e);}

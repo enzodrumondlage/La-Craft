@@ -14,6 +14,9 @@
     ],
     "voicechat": [
       "br.com.vozdacriacao.VozPlugin"
+    ],
+    "modmenu": [
+      "br.com.vozdacriacao.MenuLaCraft"
     ]
   },
   "depends": {
@@ -22,5 +25,8 @@
     "java": ">=17",
     "fabric-api": "*",
     "voicechat": ">=2.5.0"
+  },
+  "suggests": {
+    "modmenu": ">=7.2.2"
   }
 }

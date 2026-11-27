@@ -95,11 +95,12 @@ public final class VozDaCriacao implements ModInitializer {
                 }else if(s.obra.tick(p)){MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;p.sendMessage(Text.literal("§aConstrução concluída ou interrompida por obstáculos."),true);}
             }
             if(t%4!=0||!p.isAlive()||!ServerPlayNetworking.canSend(p,HUD))continue;
-            if(s.ativo&&t<=s.ate&&!p.isSpectator()&&p.getAbilities().allowModifyWorld)sugar(server,p);
+            if(ConfigLaCraft.obter().sugar&&s.ativo&&t<=s.ate&&!p.isSpectator()&&p.getAbilities().allowModifyWorld)sugar(server,p);
             if(s.ativo&&t>s.ate)s.ativo=false;
             var m=MateriaState.obter(server);
-            if(s.pedido!=null&&s.obra==null&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&m.saldo(p.getUuid())>=s.pedido.custo()){
+            if(s.pedido!=null&&s.obra==null&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&(!ConfigLaCraft.obter().coletarMateria||m.saldo(p.getUuid())>=s.pedido.custo())){
                 var pedido=s.pedido;s.pedido=null;
+                if(!ConfigLaCraft.obter().coletarMateria)pedido=new Pedido(pedido.nome(),0,pedido.tipo(),pedido.celulas());
                 var resultado=MotorCriacao.iniciar(p,pedido);
                 if(resultado.sucesso()){
                     m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();
@@ -119,7 +120,7 @@ public final class VozDaCriacao implements ModInitializer {
         ps.sort(Comparator.comparingDouble(pos->pos.getSquaredDistance(centro)));
         int n=0;
         for(BlockPos pos:ps){
-            if(n>=3||m.saldo(p.getUuid())>=MateriaState.LIMITE)break;
+            if(n>=ConfigLaCraft.obter().velocidadeSugador||m.saldo(p.getUuid())>=MateriaState.LIMITE)break;
             if(w.isOutOfHeightLimit(pos)||!w.isChunkLoaded(pos.getX()>>4,pos.getZ()>>4)||!w.canPlayerModifyAt(p,pos)||p.getEyePos().squaredDistanceTo(Vec3d.ofCenter(pos))>64||p.getBoundingBox().intersects(new Box(pos)))continue;
             BlockState b=w.getBlockState(pos);
             if(!PERMITIDOS.contains(b.getBlock())||!b.getFluidState().isEmpty()||w.getBlockEntity(pos)!=null||b.getHardness(w,pos)<0)continue;
@@ -135,6 +136,6 @@ public final class VozDaCriacao implements ModInitializer {
     }
     private static void hud(MinecraftServer server,ServerPlayerEntity p){
         if(!ServerPlayNetworking.canSend(p,HUD))return;
-        Sessao s=sessao(p);var b=PacketByteBufs.create();b.writeVarInt(MateriaState.obter(server).saldo(p.getUuid()));b.writeVarInt(s.pedido==null?0:s.pedido.custo());b.writeString(s.pedido==null?(s.gerando?"IA planejando...":(s.obra==null?"Nenhum":"Construindo...")):s.pedido.nome(),80);ServerPlayNetworking.send(p,HUD,b);
+        Sessao s=sessao(p);var b=PacketByteBufs.create();b.writeVarInt(MateriaState.obter(server).saldo(p.getUuid()));b.writeVarInt(s.pedido==null||!ConfigLaCraft.obter().coletarMateria?0:s.pedido.custo());b.writeString(s.pedido==null?(s.gerando?"IA planejando...":(s.obra==null?"Nenhum":"Construindo...")):s.pedido.nome(),80);ServerPlayNetworking.send(p,HUD,b);
     }
 }
