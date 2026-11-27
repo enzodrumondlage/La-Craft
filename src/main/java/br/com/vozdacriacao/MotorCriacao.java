@@ -54,6 +54,12 @@ public final class MotorCriacao {
         }
         Map<BlockPos,BlockState> mapa=new LinkedHashMap<>();
         switch(pedido.tipo()){
+            case VOXEL -> {
+                for(Pedido.Celula c:pedido.celulas()){
+                    Block b=net.minecraft.registry.Registries.BLOCK.get(new net.minecraft.util.Identifier("minecraft",c.bloco()));
+                    put(mapa,origem,c.x(),c.y(),c.z(),b);
+                }
+            }
             case CASA -> {
                 for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++)for(int y=0;y<=5;y++){
                     boolean borda=Math.abs(x)==3||Math.abs(z)==3;

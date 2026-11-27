@@ -1,5 +1,5 @@
 # La Craft — Voz da Criação
-Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.3.0.
+Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.4.0.
 ## Instalação
 Baixe o JAR em Actions > execução bem-sucedida > Artifacts. Instale Fabric API 0.92.2+1.20.1 e Simple Voice Chat 2.5.26. Instale os três JARs no cliente e servidor.
 ## Uso
@@ -10,6 +10,9 @@ Baixe o JAR em Actions > execução bem-sucedida > Artifacts. Instale Fabric API
 - /lacancelar: cancelar pedido pendente.
 Troque a tecla vanilla de mão secundária para outra tecla. Configure o microfone do Simple Voice Chat. Teste em um mundo separado: a matéria remove blocos reais do mundo.
 ## Limitações
-Catálogo procedural, não LLM generativo. Reconhecimento local experimental; entidades customizadas, texturas em tempo real e foguete funcional ainda não disponíveis. No modo de ativação por voz do Simple Voice Chat, fale segurando F; no modo push-to-talk, segure também a tecla do chat de voz. A fala pode ser ouvida normalmente pelos outros jogadores pelo Simple Voice Chat. O saldo é persistente; os pedidos pendentes não são. A compilação e os testes no jogo devem ser verificados separadamente.
+Catálogo procedural padrão; LLM de construções opcional. Reconhecimento local experimental; entidades customizadas, texturas em tempo real e foguete funcional ainda não disponíveis. No modo de ativação por voz do Simple Voice Chat, fale segurando F; no modo push-to-talk, segure também a tecla do chat de voz. A fala pode ser ouvida normalmente pelos outros jogadores pelo Simple Voice Chat. O saldo é persistente; os pedidos pendentes não são. A compilação e os testes no jogo devem ser verificados separadamente.
 
 Modelo: vosk-model-small-pt-0.3 (Apache 2.0), https://alphacephei.com/vosk/models. A primeira utilização extrai o modelo para config/lacraft/voz. Windows/Linux x64 são os alvos; outras plataformas não verificadas.
+
+## IA generativa de estruturas (opcional)
+O mod funciona sem serviços externos para os pedidos do catálogo. Para estruturas inéditas, um administrador pode instalar Ollama e um modelo local de texto e iniciar o Minecraft/servidor com a variável de ambiente LACRAFT_OLLAMA_MODEL definida para o nome desse modelo local. O mod usa apenas 127.0.0.1:11434; não configure modelos de nuvem. Sem essa configuração não faz requisições HTTP. Em multiplayer, avise os jogadores antes de ativar: as frases reconhecidas serão processadas pelo serviço local do servidor. A IA retorna caixas JSON que são expandidas em até 1500 voxels de uma paleta validada; o custo é calculado pelo servidor. Não executa scripts ou comandos. O reconhecimento por voz não depende do Ollama.

@@ -2,8 +2,11 @@ package br.com.vozdacriacao;
 import java.text.Normalizer;
 import java.util.Locale;
 /** Catálogo procedural de teste. Não é um LLM. */
-public record Pedido(String nome,int custo,Tipo tipo){
-    public enum Tipo { FONTE, CASA, TORRE, FOGUETE, CASTELO, BURROS, CAPIVARA, ARCO, ARMADURA }
+public record Pedido(String nome,int custo,Tipo tipo,java.util.List<Celula> celulas){
+    public record Celula(int x,int y,int z,String bloco){}
+    public Pedido(String nome,int custo,Tipo tipo){this(nome,custo,tipo,java.util.List.of());}
+    public Pedido {celulas=java.util.List.copyOf(celulas);}
+    public enum Tipo { FONTE, CASA, TORRE, FOGUETE, CASTELO, BURROS, CAPIVARA, ARCO, ARMADURA, VOXEL }
     public static Pedido interpretar(String texto){
         String t=Normalizer.normalize(texto.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","");
         if(t.contains("castelo"))return new Pedido("Castelo",500,Tipo.CASTELO);
