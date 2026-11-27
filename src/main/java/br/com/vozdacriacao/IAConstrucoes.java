@@ -30,13 +30,13 @@ public final class IAConstrucoes {
         var c=ConfigLaCraft.obter();
         return c.provedor.equals("OLLAMA")&&!c.modelo.toLowerCase(Locale.ROOT).contains("cloud")||c.provedor.equals("OPENAI")&&c.permitirNuvem&&!ConfigLaCraft.chave(c).isBlank();
     }
-    public static CompletableFuture<Pedido> planejar(String texto){
+    public static CompletableFuture<Pedido> planejar(String texto,String catalogo){
         if(!ativo()||!OCUPADO.compareAndSet(false,true))return null;
         final ConfigLaCraft cfg=ConfigLaCraft.obter().copia();
         return CompletableFuture.supplyAsync(()->{
             try{
                 JsonObject req=new JsonObject();
-                req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS));
+                req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");
                 req.addProperty("prompt",texto);req.addProperty("stream",false);req.addProperty("format","json");
                 JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",2048);req.add("options",opts);
                 boolean nuvem=cfg.provedor.equals("OPENAI");
@@ -45,7 +45,7 @@ public final class IAConstrucoes {
                     if(!cfg.permitirNuvem)throw new IllegalArgumentException("Nuvem não autorizada");
                     JsonObject payload=new JsonObject();payload.addProperty("model",cfg.modelo);
                     JsonArray msgs=new JsonArray();
-                    JsonObject sys=new JsonObject();sys.addProperty("role","system");sys.addProperty("content",SISTEMA+" Blocos: "+String.join(", ",BLOCOS));msgs.add(sys);
+                    JsonObject sys=new JsonObject();sys.addProperty("role","system");sys.addProperty("content",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");msgs.add(sys);
                     JsonObject user=new JsonObject();user.addProperty("role","user");user.addProperty("content",texto);msgs.add(user);payload.add("messages",msgs);
                     JsonObject formato=new JsonObject();formato.addProperty("type","json_object");payload.add("response_format",formato);
                     payload.addProperty("max_completion_tokens",2048);req=payload;

@@ -33,3 +33,6 @@ Chat: escreva `quero voar`, `casa`, `quero um piglin gigante`, `quero uma espada
 
 ## Motor de artefatos — primeira etapa
 Artefatos registrados com NBT persistente, cor de renderização e até cinco efeitos combináveis (cura, respirar, velocidade, salto, invisibilidade, resistência, levitação breve, brilho, nuvem, música). Experimente: `quero um cristal verde de cura e velocidade`. Clique direito para usar. Não são ainda modelos/texturas inéditos. Confirmação de voz editável ativa por padrão, desligável em Chat. Com LLM configurado, todos os pedidos passam pela IA; falhas não materializam um desejo diferente automaticamente. Sem LLM, o catálogo e o compositor limitado continuam disponíveis.
+
+## La Craft Infinite — pacote experimental
+O workflow também resolve os projetos listados em `modpack/projetos.json`, com dependências obrigatórias, versão Minecraft/Fabric, hashes e verificação de conflitos declarados. Importar o `.mrpack` pelo Prism Launcher ou Modrinth App; não redistribuímos JARs de terceiros sem verificar as licenças. A IA recebe uma lista limitada de IDs reais relevantes dos registros de itens, entidades e blocos. Isso não implementa APIs específicas dos mods nem garante combinação de habilidades. O pacote ainda necessita teste de inicialização e multiplayer.

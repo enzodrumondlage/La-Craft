@@ -83,7 +83,7 @@ public final class VozDaCriacao implements ModInitializer {
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
             if(s.gerando){p.sendMessage(Text.literal("§eJá existe uma criação sendo planejada."),true);return 0;}
-            var futuro=IAConstrucoes.planejar(texto);
+            var futuro=IAConstrucoes.planejar(texto,CatalogoMods.contexto(texto));
             if(futuro==null){p.sendMessage(Text.literal("§eIA ocupada. Tente novamente."),true);return 0;}
             s.pedido=null;s.gerando=true;long geracao=++s.geracao;hud(server,p);
             futuro.whenComplete((plano,erro)->server.execute(()->{
