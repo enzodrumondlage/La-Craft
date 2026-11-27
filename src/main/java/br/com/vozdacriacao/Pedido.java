@@ -11,7 +11,12 @@ public record Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String
     public enum Tipo { FONTE,CASA,TORRE,FOGUETE,CASTELO,BURROS,CAPIVARA,ARCO,ARMADURA,VOXEL,VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB }
     static String normal(String s){return Normalizer.normalize(s.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","").trim();}
     static boolean palavra(String s,String p){return Pattern.compile("(?<![a-z0-9_])(?:"+p+")(?![a-z0-9_])").matcher(s).find();}
-    public static boolean pedidoChat(String s){String t=normal(s);return t.matches("^(quero|desejo|crie|criar|construa|construir|invoque|invocar|me de|me da|me transforme|lacraft:)\\b.*")||interpretar(s)!=null&&t.split("\\s+").length<=4;}
+    public static boolean pedidoChat(String s){
+        String t=normal(s);
+        if(t.startsWith("lacraft: ")||t.matches("^(quero|desejo|crie|criar|construa|construir|invoque|invocar|me de|me da|me transforme)\\b.*"))return true;
+        try{return interpretar(s)!=null&&t.split("\\s+").length<=4;}
+        catch(IllegalArgumentException ex){return false;}
+    }
     public static Pedido dinamico(String nome,Tipo tipo,String alvo,int qtd,int escala){
         if(tipo!=Tipo.ITEM&&tipo!=Tipo.MOB)throw new IllegalArgumentException("Tipo inválido");
         if(!alvo.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")||alvo.length()>120||qtd<1||qtd>(tipo==Tipo.MOB?8:64)||escala<1||escala>4)throw new IllegalArgumentException("Dados inválidos");
@@ -22,6 +27,7 @@ public record Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String
         Matcher id=Pattern.compile("([a-z0-9_.-]+:[a-z0-9_./-]+)").matcher(t);
         if(id.find()){
             String alvo=id.group(1);
+            if(alvo.startsWith("lacraft:"))return null;
             boolean mob=palavra(t,"mob|entidade|invoque|invocar");
             return dinamico(alvo,mob?Tipo.MOB:Tipo.ITEM,alvo,1,palavra(t,"gigante")?3:1);
         }

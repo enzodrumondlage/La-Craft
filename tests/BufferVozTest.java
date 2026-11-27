@@ -10,6 +10,11 @@ public class BufferVozTest {
         if(BufferVoz.finalizar().length!=BufferVoz.MAX)throw new AssertionError();
         if(Pedido.interpretar("Estátua de capivara").tipo()!=Pedido.Tipo.CAPIVARA)throw new AssertionError();
         if(Pedido.interpretar("zzz")!=null)throw new AssertionError();
+        if(Pedido.interpretar("barco que").tipo()!=Pedido.Tipo.ITEM)throw new AssertionError("barco virou arco");
+        if(Pedido.interpretar("quero voar").tipo()!=Pedido.Tipo.VOO)throw new AssertionError();
+        if(Pedido.interpretar("piglim gigante").escala()!=3)throw new AssertionError();
+        if(Pedido.interpretar("quero item exemplo:cristal").tipo()!=Pedido.Tipo.ITEM)throw new AssertionError();
+        if(!Pedido.pedidoChat("casa")||!Pedido.pedidoChat("quero uma pirâmide")||Pedido.pedidoChat("oi tudo bem"))throw new AssertionError();
         System.out.println("Testes locais OK");
     }
 }

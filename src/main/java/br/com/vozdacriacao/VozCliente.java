@@ -83,7 +83,7 @@ public final class VozCliente implements ClientModInitializer {
                     if(g!=geracao)return;
                     processando=false;
                     if(mc.player==null||!ClientPlayNetworking.canSend(VozDaCriacao.PEDIR))return;
-                    if(erro!=null){mc.player.sendMessage(Text.literal("§eFalha no reconhecimento local. Veja latest.log."),false);return;}
+                    if(erro!=null){org.slf4j.LoggerFactory.getLogger("LaCraft").warn("Falha no reconhecimento de voz",erro);mc.player.sendMessage(Text.literal("§eFalha na transcrição. Confira a configuração e latest.log."),false);return;}
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
                     String texto=frase.substring(0,Math.min(frase.length(),240));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);

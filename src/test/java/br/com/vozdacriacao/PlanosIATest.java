@@ -21,6 +21,9 @@ public final class PlanosIATest {
         rejeitar(plano(""));
         rejeitar(plano("{\"x1\":-6,\"y1\":0,\"z1\":-6,\"x2\":6,\"y2\":20,\"z2\":6,\"bloco\":\"stone_bricks\",\"oco\":false}"));
         rejeitar(plano(caixa("stone_bricks",1,1,1,false).replace("\"x1\":0","\"x1\":0.5")));
-        System.out.println("Planos IA: 9 testes aprovados");
+        eq(IAConstrucoes.validar("{\"nome\":\"Voo\",\"tipo\":\"voo\"}").custo(),120);
+        eq(IAConstrucoes.validar("{\"nome\":\"Mob\",\"tipo\":\"mob\",\"id\":\"minecraft:piglin\",\"quantidade\":2,\"escala\":3}").custo(),180);
+        rejeitar("{\"nome\":\"Mob\",\"tipo\":\"mob\",\"id\":\"minecraft:piglin\",\"quantidade\":99,\"escala\":3}");
+        System.out.println("Planos IA: testes aprovados");
     }
 }

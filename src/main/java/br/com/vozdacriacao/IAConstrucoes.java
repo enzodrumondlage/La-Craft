@@ -21,7 +21,7 @@ public final class IAConstrucoes {
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
         Para itens existentes use {"nome":"nome","tipo":"item","id":"minecraft:diamond","quantidade":8}.
         Para mobs existentes use {"nome":"nome","tipo":"mob","id":"minecraft:piglin","quantidade":1,"escala":3}; escala de 1 a 4, quantidade 1 a 8.
-        Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada.
+        Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -83,6 +83,8 @@ public final class IAConstrucoes {
                 case "invisivel"->new Pedido(nome,80,Pedido.Tipo.INVISIVEL);
                 case "laser"->new Pedido(nome,150,Pedido.Tipo.LASER);
                 case "espada"->new Pedido(nome,180,Pedido.Tipo.ESPADA);
+                case "arco"->new Pedido(nome,200,Pedido.Tipo.ARCO);
+                case "armadura"->new Pedido(nome,200,Pedido.Tipo.ARMADURA);
                 default->null;
             };
             if(p!=null)return p;
