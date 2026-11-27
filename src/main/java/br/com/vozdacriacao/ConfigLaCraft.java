@@ -14,6 +14,9 @@ public final class ConfigLaCraft {
     public boolean coletarMateria=true;
     public boolean hud=true;
     public boolean particulas=true;
+    public boolean criaturasPorDesejo=true;
+    public int perfilFPS=0;
+    public boolean previa3d=true;
     public boolean sons=true;
     public boolean chatDesejos=true;
     public boolean chatTodos=false;
@@ -34,6 +37,7 @@ public final class ConfigLaCraft {
     public static ConfigLaCraft obter(){return atual;}
     public ConfigLaCraft copia(){return GSON.fromJson(GSON.toJson(this),ConfigLaCraft.class);}
     private void validar(){
+        perfilFPS=Math.max(0,Math.min(2,perfilFPS));
         qualidadeCasa=Math.max(1,Math.min(4,qualidadeCasa));volumeSons=Math.max(0,Math.min(100,volumeSons));
         velocidadeSugador=Math.max(1,Math.min(6,velocidadeSugador));
         velocidadeConstrucao=Math.max(2,Math.min(16,velocidadeConstrucao));

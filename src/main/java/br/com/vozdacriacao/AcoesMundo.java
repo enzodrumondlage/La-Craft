@@ -80,7 +80,7 @@ final class AcoesMundo {
                 mob.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(net.minecraft.entity.effect.StatusEffects.SLOW_FALLING,240,0));
                 if(!w.isSpaceEmpty(mob,mob.getBoundingBox())){mob.discard();continue;}
             }
-            if(w.spawnEntity(entidade)){w.spawnParticles(ParticleTypes.CLOUD,pos.getX()+.5,pos.getY(),pos.getZ()+.5,5,.3,.3,.3,.02);e.setValue(new Chuva(w,c.centro(),a,c.inicio(),c.feitos()+1));}
+            if(SpawnDesejo.invocar(w,entidade)){w.spawnParticles(ParticleTypes.CLOUD,pos.getX()+.5,pos.getY(),pos.getZ()+.5,5,.3,.3,.3,.02);e.setValue(new Chuva(w,c.centro(),a,c.inicio(),c.feitos()+1));}
         }
     }
 }

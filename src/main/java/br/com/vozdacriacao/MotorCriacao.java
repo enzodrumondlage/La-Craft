@@ -21,13 +21,13 @@ public final class MotorCriacao {
         Obra(ServerWorld w,List<Voxel> v,int c,boolean r){mundo=w;voxels=v;custo=c;residencia=r;}
         boolean tick(ServerPlayerEntity p){
             tempo++;
-            for(int n=0;n<ConfigLaCraft.obter().velocidadeConstrucao&&i<voxels.size();n++){
+            for(int n=0;n<Math.min(ConfigLaCraft.obter().velocidadeConstrucao,ConfigLaCraft.obter().perfilFPS==0?4:ConfigLaCraft.obter().perfilFPS==1?8:16)&&i<voxels.size();n++){
                 Voxel v=voxels.get(i++);
                 if(!livre(mundo,p,v.pos()))return true;
                 if(mundo.setBlockState(v.pos(),v.estado(),residencia?Block.NOTIFY_LISTENERS:Block.NOTIFY_ALL)){
                     colocados++;
                     if(n==0&&tempo%4==1)VozDaCriacao.som(mundo,v.pos(),2);
-                    mundo.spawnParticles(ParticleTypes.END_ROD,v.pos().getX()+.5,v.pos().getY()+.5,v.pos().getZ()+.5,2,.3,.3,.3,.02);
+                    if(ConfigLaCraft.obter().particulas&&(ConfigLaCraft.obter().perfilFPS!=0||n==0&&tempo%4==0))mundo.spawnParticles(ParticleTypes.END_ROD,v.pos().getX()+.5,v.pos().getY()+.5,v.pos().getZ()+.5,2,.3,.3,.3,.02);
                 }else return true;
             }
             return i>=voxels.size();

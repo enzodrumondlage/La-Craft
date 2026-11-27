@@ -11,7 +11,7 @@ final class PreviaHud {
     static void limpar(){celulas=List.of();nome="";ate=0;}
     static int cor(String b){if(b.contains("water"))return 0xff43bde6;if(b.contains("glass"))return 0xff568fba;if(b.contains("grass")||b.contains("poppy"))return 0xff72a65d;if(b.contains("plank")||b.contains("log"))return 0xffa68054;if(b.contains("lantern"))return 0xffffd17c;return 0xffb4c4d0;}
     static void render(DrawContext ctx,int t,int feitos,int total){
-        if(celulas.isEmpty()||total==0&&t>ate)return;
+        if(!ConfigLaCraft.obter().previa3d||celulas.isEmpty()||total==0&&t>ate)return;
         int x=8,y=94,w=214,h=104;
         ctx.fill(x,y,x+w,y+h,0xe0172536);
         var tr=MinecraftClient.getInstance().textRenderer;

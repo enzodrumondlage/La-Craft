@@ -43,6 +43,10 @@ public final class TelaLaCraft extends Screen {
             botao(x,y+22,w,"Volume La Craft: "+rascunho.volumeSons+"%",()->{rascunho.volumeSons=rascunho.volumeSons>=100?0:Math.min(100,rascunho.volumeSons+20);atualizar();});
             botao(x,y+66,w,"Testar Ollama",()->{aviso="Testando serviço local...";TesteOllama.testar(rascunho.modelo).thenAccept(msg->{if(client!=null)client.execute(()->{aviso=msg;});});});
             botao(x,y+44,w,"Gerar relatório de diagnóstico",()->{aviso=DiagnosticoLaCraft.gerar()?"Relatório salvo em config/lacraft-diagnostico.txt":"Falha ao salvar relatório";atualizar();});
+        }else if(pagina==4){
+            botao(x,y,w,"Perfil: "+java.util.List.of("FPS Extremo","Equilibrado","Cinematográfico").get(rascunho.perfilFPS),()->{rascunho.perfilFPS=(rascunho.perfilFPS+1)%3;atualizar();});
+            var spawn=botao(x,y+22,w,"Criaturas especiais por desejo: "+sn(rascunho.criaturasPorDesejo),()->{rascunho.criaturasPorDesejo=!rascunho.criaturasPorDesejo;atualizar();});spawn.active=!remoto;
+            botao(x,y+44,w,"Prévia 3D: "+sn(rascunho.previa3d),()->{rascunho.previa3d=!rascunho.previa3d;atualizar();});
         }else if(pagina==2){
             var chat=botao(x,y,w,"Desejos pelo chat: "+sn(rascunho.chatDesejos),()->{rascunho.chatDesejos=!rascunho.chatDesejos;atualizar();});chat.active=!remoto;
             var todos=botao(x,y+22,w,"Interpretar todo o chat: "+sn(rascunho.chatTodos),()->{rascunho.chatTodos=!rascunho.chatTodos;atualizar();});todos.active=!remoto;
@@ -69,7 +73,7 @@ public final class TelaLaCraft extends Screen {
             var apagar=botao(x,y+116,w,"Apagar chave salva",()->{if(chave!=null)chave.setText("");rascunho.chaveApi="";atualizar();});apagar.active=!remoto;
         }
         int rodape=height-26,metade=(w-8)/3;
-        botao(x,rodape,metade,pagina==0?"IA >":pagina==1?"Chat >":pagina==2?"Extras >":"< Jogo",()->{capturar();pagina=(pagina+1)%4;atualizar();});
+        botao(x,rodape,metade,pagina==0?"IA >":pagina==1?"Chat >":pagina==2?"Extras >":pagina==3?"FPS >":"< Jogo",()->{capturar();pagina=(pagina+1)%5;atualizar();});
         botao(x+metade+4,rodape,metade,"Salvar",()->{capturar();if(ConfigLaCraft.salvar(rascunho)){close();}else{aviso="Erro ao salvar.";atualizar();}});
         botao(x+2*(metade+4),rodape,w-2*(metade+4),"Cancelar",this::close);
     }

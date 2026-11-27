@@ -54,3 +54,6 @@ Planta modular de um andar com até 12 ambientes, contagens de banheiros e quart
 
 ### 0.9.1 experimental
 Automobility 0.4.2: carro com dados de frame, wheels e engine de acordo com AutomobileItem/AutomobilePrefab oficiais, escolha de cor. Fenômenos visuais de onda e redemoinho temporários, sem destruição. Desfazer a última construção da sessão apenas se os blocos continuam intactos e os inventários vazios. Sem garantia de execução em jogo; geração 3D universal ainda não implementada.
+
+### 0.9.2 experimental
+Perfil FPS e prévia opcional; minimapas e efeitos pesados removidos do manifesto; Revelationary e Modonomicon obrigatórios; política de spawn seletivo para criaturas especiais em ServerWorld e tentativa de interceptação na geração de chunks. Entidades autorizadas recebem tag persistente. Ollama passa a planejar também residências e aceita arquitetura por caixas com vãos e mobiliário; não executa fallback silencioso quando a IA falha. Ainda não é 1.0.0: não há testes de cliente, geração universal de modelos/texturas/animações ou garantia de interceptar todos os caminhos de spawn de outros mods.

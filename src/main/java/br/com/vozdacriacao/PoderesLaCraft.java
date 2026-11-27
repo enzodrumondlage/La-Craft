@@ -103,7 +103,7 @@ public final class PoderesLaCraft {
                     if(!w.isSpaceEmpty(mob,mob.getBoundingBox())){mob.discard();continue;}
                     if(mob instanceof PiglinEntity piglin)piglin.setImmuneToZombification(true);
                     if(pedido.escala()>1){mob.setCustomName(Text.literal(GIGANTE+pedido.nome()));mob.setCustomNameVisible(false);}
-                    if(w.spawnEntity(mob)){feitos++;w.spawnParticles(ParticleTypes.END_ROD,mob.getX(),mob.getY()+1,mob.getZ(),16,.4,.6,.4,.02);}
+                    if(SpawnDesejo.invocar(w,mob)){feitos++;w.spawnParticles(ParticleTypes.END_ROD,mob.getX(),mob.getY()+1,mob.getZ(),16,.4,.6,.4,.02);}
                 }return feitos>0;
             }
             default -> {return false;}

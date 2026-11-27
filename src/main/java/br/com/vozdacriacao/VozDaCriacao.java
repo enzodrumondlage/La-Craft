@@ -84,10 +84,10 @@ public final class VozDaCriacao implements ModInitializer {
         }
         if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
         Pedido pedido;
-        try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
+        try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){if(IAConstrucoes.ativo())pedido=null;else{p.sendMessage(Text.literal("§ePedido não suportado pelo modo offline: "+ex.getMessage()),true);return 0;}}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
         Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
-        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA){s.pedido=pedido;hud(server,p);return 1;}
+        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA&&!IAConstrucoes.ativo()){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
@@ -99,8 +99,9 @@ public final class VozDaCriacao implements ModInitializer {
                 if(sessoes.get(p.getUuid())!=s||s.geracao!=geracao)return;
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
-                    s.pedido=erro==null?plano:alternativa;
-                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+(alternativa!=null?" Alternativa local limitada selecionada.":"")),false);
+                    s.pedido=erro==null?plano:null;
+                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada."),false);
+                    else if(s.pedido!=null)p.sendMessage(Text.literal("§bPlano gerado pela IA: "+s.pedido.nome()),false);
                     else if(s.pedido==null)p.sendMessage(Text.literal("§ePlano indisponível."),false);
 
                 }
@@ -180,7 +181,7 @@ public final class VozDaCriacao implements ModInitializer {
     private static void enviarPrevia(ServerPlayerEntity p,Pedido pedido){
         if(!ServerPlayNetworking.canSend(p,PREVIA))return;
         var b=PacketByteBufs.create();b.writeString(pedido.nome(),80);
-        var celulas=pedido.celulas();int passo=Math.max(1,(celulas.size()+799)/800);
+        var celulas=pedido.celulas();int max=ConfigLaCraft.obter().perfilFPS==0?200:ConfigLaCraft.obter().perfilFPS==1?400:800;int passo=Math.max(1,(celulas.size()+max-1)/max);
         b.writeVarInt((celulas.size()+passo-1)/passo);
         for(int i=0;i<celulas.size();i+=passo){var c=celulas.get(i);b.writeInt(c.x());b.writeInt(c.y());b.writeInt(c.z());b.writeString(c.bloco(),120);}
         ServerPlayNetworking.send(p,PREVIA,b);

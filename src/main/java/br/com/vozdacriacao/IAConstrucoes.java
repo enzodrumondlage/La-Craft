@@ -29,6 +29,8 @@ public final class IAConstrucoes {
         Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
         Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno visual sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho; duração 1 a 30 segundos.
+        Para arquitetura personalizada prefira tipo arquitetura: {"nome":"Casa","tipo":"arquitetura","caixas":[{"x1":-8,"y1":0,"z1":-8,"x2":8,"y2":0,"z2":8,"bloco":"smooth_stone","oco":false}]}.
+        Para arquitetura use até 96 caixas, x/z de -24 a 24, y de 0 a 24, até 10000 blocos. Use caixas de paredes, pisos e telhados separadas, deixando vãos para portas e escadas. Bloco air remove voxels do plano, nunca do mundo. Inclua móveis e iluminação de acordo com o pedido; cama_pe e cama_cabeca devem ser vizinhas no eixo Z, porta_baixo e porta_cima na mesma coluna. Não declare cômodos que não existem. Para desejos não suportados devolva caixas vazias.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -47,7 +49,7 @@ public final class IAConstrucoes {
                 JsonObject req=new JsonObject();
                 req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");
                 req.addProperty("prompt",pedidoTexto);req.addProperty("stream",false);req.addProperty("format","json");
-                JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",2048);req.add("options",opts);
+                JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",3072);opts.addProperty("num_ctx",4096);req.add("options",opts);
                 boolean nuvem=cfg.provedor.equals("OPENAI");
                 HttpRequest.Builder builder;
                 if(nuvem){
@@ -94,6 +96,7 @@ public final class IAConstrucoes {
         String nome=plano.get("nome").getAsString().replaceAll("[\\p{Cntrl}§]","").trim();
         if(nome.isEmpty())nome="Construção IA";
         nome=nome.substring(0,Math.min(48,nome.length()));
+        boolean arquitetura=plano.has("tipo")&&plano.get("tipo").getAsString().equals("arquitetura");
         if(plano.has("tipo")){
             String tipo=plano.get("tipo").getAsString();
             if(tipo.equals("sequencia")){
@@ -135,27 +138,28 @@ public final class IAConstrucoes {
                 default->null;
             };
             if(p!=null)return p;
-            if(!tipo.equals("voxel"))throw new IllegalArgumentException("Tipo desconhecido");
+            if(!tipo.equals("voxel")&&!arquitetura)throw new IllegalArgumentException("Tipo desconhecido");
         }
         JsonArray caixas=plano.getAsJsonArray("caixas");
-        if(caixas.isEmpty()||caixas.size()>64)throw new IllegalArgumentException("Quantidade de caixas inválida");
+        if(caixas.isEmpty()||caixas.size()>(arquitetura?96:64))throw new IllegalArgumentException("Quantidade de caixas inválida");
         record Pos(int x,int y,int z){}
         Map<Pos,Pedido.Celula> voxels=new LinkedHashMap<>();
         for(JsonElement elemento:caixas){
             JsonObject c=elemento.getAsJsonObject();
-            int x1=num(c,"x1",-6,6),x2=num(c,"x2",-6,6),z1=num(c,"z1",-6,6),z2=num(c,"z2",-6,6),y1=num(c,"y1",0,20),y2=num(c,"y2",0,20);
+            int r=arquitetura?24:6,h=arquitetura?24:20;
+            int x1=num(c,"x1",-r,r),x2=num(c,"x2",-r,r),z1=num(c,"z1",-r,r),z2=num(c,"z2",-r,r),y1=num(c,"y1",0,h),y2=num(c,"y2",0,h);
             if(x1>x2||y1>y2||z1>z2)throw new IllegalArgumentException("Caixa invertida");
-            String bloco=c.get("bloco").getAsString();if(!BLOCOS.contains(bloco))throw new IllegalArgumentException("Bloco proibido");
+            String bloco=c.get("bloco").getAsString();if(!BLOCOS.contains(bloco)&&!(arquitetura&&Set.of("air","smooth_stone","smooth_quartz","porta_baixo","porta_cima","cama_pe","cama_cabeca","bau","fornalha","crafting_table","cauldron","quartz_stairs","lantern","white_carpet","water","poppy","telhado_leste","telhado_oeste").contains(bloco)))throw new IllegalArgumentException("Bloco proibido");
             if(!c.get("oco").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("oco inválido");
             boolean oco=c.get("oco").getAsBoolean();
             for(int x=x1;x<=x2;x++)for(int y=y1;y<=y2;y++)for(int z=z1;z<=z2;z++){
                 if(oco&&x>x1&&x<x2&&y>y1&&y<y2&&z>z1&&z<z2)continue;
-                voxels.put(new Pos(x,y,z),new Pedido.Celula(x,y,z,bloco));
-                if(voxels.size()>1500)throw new IllegalArgumentException("Limite de voxels");
+                if(bloco.equals("air"))voxels.remove(new Pos(x,y,z));else voxels.put(new Pos(x,y,z),new Pedido.Celula(x,y,z,bloco));
+                if(voxels.size()>(arquitetura?10000:1500))throw new IllegalArgumentException("Limite de voxels");
             }
         }
         if(voxels.isEmpty())throw new IllegalArgumentException("Plano vazio");
-        return new Pedido(nome,voxels.size(),Pedido.Tipo.VOXEL,List.copyOf(voxels.values()));
+        return new Pedido(nome,voxels.size(),arquitetura?Pedido.Tipo.RESIDENCIA:Pedido.Tipo.VOXEL,List.copyOf(voxels.values()));
     }
     private static boolean bool(JsonObject o,String k){var e=o.get(k).getAsJsonPrimitive();if(!e.isBoolean())throw new IllegalArgumentException("Campo booleano");return e.getAsBoolean();}
     private static int num(JsonObject o,String k,int min,int max){
