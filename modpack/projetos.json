@@ -14,7 +14,8 @@
     "sodium",
     "lithium",
     "ferrite-core",
-    "mutant-monsters"
+    "mutant-monsters",
+    "structure-pool-api"
   ],
   "expansao": [
     "bosses-of-mass-destruction",
