@@ -42,3 +42,6 @@ Residências com portas, janelas, cama, baú, bancada, fornalha, iluminação, t
 
 ### 0.8.2 experimental
 Ações de horário e clima autorizadas, chuva de itens/mobs com orçamento e cancelamento, voo temporizado, planos de até oito ações sequenciais, residências de até quatro quartos e catálogo com categoria técnica dos itens. Não é um motor universal completo; sem Whisper, modelos originais, tsunami, furacão ou teste em jogo comprovado. Indium obrigatório no pacote; expansão adicional sujeita ao resolvedor.
+
+### 0.8.3 — Whisper local opcional
+O menu Chat permite ativar Whisper local. Requer um whisper-server do projeto whisper.cpp instalado separadamente, com modelo multilíngue, idioma pt e escuta somente em 127.0.0.1:8080. Documentação oficial: https://github.com/ggml-org/whisper.cpp/tree/master/examples/server . O mod envia WAV PCM mono 16 kHz ao endpoint local /inference e, se indisponível, usa Vosk com aviso. Não instala o servidor nem o modelo automaticamente; não foi validado com gravações reais. A captura permanece via Simple Voice Chat.

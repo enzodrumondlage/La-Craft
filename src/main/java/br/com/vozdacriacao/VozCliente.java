@@ -82,11 +82,15 @@ public final class VozCliente implements ClientModInitializer {
             if(!AudioLimpo.preparar(pcm)){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eÁudio muito baixo ou silencioso. Configure o microfone e a ativação do Simple Voice Chat."),true);}
             else {
                 processando=true;long g=++geracao;
-                (ConfigLaCraft.obter().vozNuvem&&ConfigLaCraft.obter().permitirNuvem&&!ConfigLaCraft.chave(ConfigLaCraft.obter()).isBlank()?VozNuvem.transcrever(pcm):ReconhecedorVoz.transcrever(pcm)).whenComplete((frase,erro)->mc.execute(()->{
+                var cfg=ConfigLaCraft.obter();
+                java.util.concurrent.CompletableFuture<WhisperLocal.Resultado> tarefa=cfg.whisperLocal?WhisperLocal.transcrever(pcm):(cfg.vozNuvem&&cfg.permitirNuvem&&!ConfigLaCraft.chave(cfg).isBlank()?VozNuvem.transcrever(pcm):ReconhecedorVoz.transcrever(pcm)).thenApply(t->new WhisperLocal.Resultado(t,false));
+                tarefa.whenComplete((resultado,erro)->mc.execute(()->{
                     if(g!=geracao)return;
                     processando=false;
                     if(mc.player==null||!ClientPlayNetworking.canSend(VozDaCriacao.PEDIR))return;
                     if(erro!=null){org.slf4j.LoggerFactory.getLogger("LaCraft").warn("Falha no reconhecimento de voz",erro);mc.player.sendMessage(Text.literal("§eFalha na transcrição. Confira a configuração e latest.log."),false);return;}
+                    if(resultado.fallback())mc.player.sendMessage(Text.literal("§eWhisper local indisponível; usando Vosk."),false);
+                    String frase=resultado.texto();
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
                     String texto=frase.substring(0,Math.min(frase.length(),240));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);

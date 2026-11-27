@@ -47,6 +47,7 @@ public final class TelaLaCraft extends Screen {
             var chat=botao(x,y,w,"Desejos pelo chat: "+sn(rascunho.chatDesejos),()->{rascunho.chatDesejos=!rascunho.chatDesejos;atualizar();});chat.active=!remoto;
             var todos=botao(x,y+22,w,"Interpretar todo o chat: "+sn(rascunho.chatTodos),()->{rascunho.chatTodos=!rascunho.chatTodos;atualizar();});todos.active=!remoto;
             botao(x,y+66,w,"Confirmar frase antes de criar: "+sn(rascunho.confirmarVoz),()->{rascunho.confirmarVoz=!rascunho.confirmarVoz;atualizar();});
+            botao(x,y+88,w,"Whisper local (porta 8080): "+sn(rascunho.whisperLocal),()->{rascunho.whisperLocal=!rascunho.whisperLocal;atualizar();});
             botao(x,y+44,w,"Transcrição OpenAI (envia áudio): "+sn(rascunho.vozNuvem),()->{rascunho.vozNuvem=!rascunho.vozNuvem;atualizar();});
         }else{
             var prov=botao(x,y,w,"IA: "+rascunho.provedor,()->{

@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.6.12' }
-version = '0.8.2'
+version = '0.8.3'
 group = 'br.com.vozdacriacao'
 base { archivesName = 'la-craft' }
 repositories {
@@ -45,3 +45,10 @@ tasks.register('testarResidencia', JavaExec) {
     mainClass = 'br.com.vozdacriacao.ResidenciaTest'
 }
 tasks.named('check') { dependsOn testarResidencia }
+
+tasks.register('testarWhisperWav', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'br.com.vozdacriacao.WhisperLocalTest'
+}
+tasks.named('check') { dependsOn testarWhisperWav }

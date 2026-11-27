@@ -18,6 +18,7 @@ public final class ConfigLaCraft {
     public boolean chatDesejos=true;
     public boolean chatTodos=false;
     public boolean vozNuvem=false;
+    public boolean whisperLocal=false;
     public boolean confirmarVoz=true;
     public int qualidadeCasa=4;
     public int volumeSons=80;
