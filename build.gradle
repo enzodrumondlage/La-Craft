@@ -1,5 +1,5 @@
 plugins { id 'fabric-loom' version '1.6.12' }
-version = '0.2.0'
+version = '0.3.0'
 group = 'br.com.vozdacriacao'
 base { archivesName = 'la-craft' }
 repositories {
@@ -12,6 +12,8 @@ dependencies {
     mappings 'net.fabricmc:yarn:1.20.1+build.10:v2'
     modImplementation 'net.fabricmc:fabric-loader:0.16.10'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.92.2+1.20.1'
+    implementation('com.alphacephei:vosk:0.3.45') { transitive = false }
+    include 'com.alphacephei:vosk:0.3.45'
     compileOnly 'de.maxhenkel.voicechat:voicechat-api:2.5.0'
 }
 java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17; withSourcesJar() }

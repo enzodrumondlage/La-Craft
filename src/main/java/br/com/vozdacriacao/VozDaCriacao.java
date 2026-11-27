@@ -21,10 +21,10 @@ import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
 
 public final class VozDaCriacao implements ModInitializer {
-    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito");
+    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir");
     private static final Map<UUID,Sessao> sessoes=new HashMap<>();
     private static final Set<Block> PERMITIDOS=Set.of(Blocks.DIRT,Blocks.GRASS_BLOCK,Blocks.COARSE_DIRT,Blocks.STONE,Blocks.COBBLESTONE,Blocks.SAND,Blocks.RED_SAND,Blocks.GRAVEL,Blocks.ANDESITE,Blocks.DIORITE,Blocks.GRANITE,Blocks.DEEPSLATE,Blocks.NETHERRACK,Blocks.END_STONE);
-    private static final class Sessao {int ate,ultimo=-100;boolean ativo;Pedido pedido;MotorCriacao.Obra obra;}
+    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo;Pedido pedido;MotorCriacao.Obra obra;}
     private static Identifier id(String n){return new Identifier("vozdacriacao",n);}
     private static Sessao sessao(ServerPlayerEntity p){return sessoes.computeIfAbsent(p.getUuid(),k->new Sessao());}
     @Override public void onInitialize(){
@@ -32,6 +32,19 @@ public final class VozDaCriacao implements ModInitializer {
             if(buf.readableBytes()!=1)return;
             boolean ativo=buf.readBoolean();
             server.execute(()->{Sessao s=sessao(p);int t=server.getTicks();if(ativo&&t-s.ultimo<2)return;s.ultimo=t;s.ativo=ativo;s.ate=t+12;});
+        });
+        ServerPlayNetworking.registerGlobalReceiver(PEDIR,(server,p,handler,buf,sender)->{
+            if(buf.readableBytes()>970)return;
+            final String texto;
+            try{texto=buf.readString(240);}catch(RuntimeException ex){return;}
+            if(buf.isReadable())return;
+            server.execute(()->{
+                Sessao s=sessao(p);int t=server.getTicks();
+                if(t-s.ultimoPedido<40)return;
+                s.ultimoPedido=t;
+                if(texto.codePoints().anyMatch(Character::isISOControl))return;
+                pedir(server,p,texto);
+            });
         });
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{

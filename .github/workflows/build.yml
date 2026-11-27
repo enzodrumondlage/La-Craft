@@ -19,10 +19,15 @@ jobs:
           mkdir -p /tmp/lacraft-test
           javac --release 17 -d /tmp/lacraft-test src/main/java/br/com/vozdacriacao/{BufferVoz,Pedido}.java tests/BufferVozTest.java
           java -cp /tmp/lacraft-test BufferVozTest
+      - name: Embutir modelo de reconhecimento PT
+        run: |
+          mkdir -p src/main/resources/vozdacriacao
+          curl --fail --location --retry 3 --max-time 180 https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip -o src/main/resources/vozdacriacao/modelo-pt.zip
+          unzip -t src/main/resources/vozdacriacao/modelo-pt.zip
       - name: Compilar mod
         run: gradle build --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: la-craft-0.2.0
-          path: build/libs/la-craft-0.2.0.jar
+          name: la-craft-0.3.0
+          path: build/libs/la-craft-0.3.0.jar
           if-no-files-found: error

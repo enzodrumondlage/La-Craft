@@ -20,7 +20,8 @@ import java.util.*;
 
 public final class VozCliente implements ClientModInitializer {
     private static KeyBinding voz,sugar;
-    private static boolean gravando,sugando,bloqueio;
+    private static boolean gravando,sugando,bloqueio,processando;
+    private static long geracao;
     private static int ticks,inicio,materia,custo;
     private static String pedido="Nenhum";
     private static final List<Fragmento> fragmentos=new ArrayList<>();
@@ -43,6 +44,7 @@ public final class VozCliente implements ClientModInitializer {
             if(custo>0)ctx.fill(x+7,y+31,x+7+(int)((l-14)*Math.min(1.0,materia/(double)custo)),y+35,0xFF4DE29C);
             String n=custo>0?"Pedido: "+pedido:(!pedido.equals("Nenhum")?pedido:"G: sugar | F: voz | /lacraft");
             ctx.drawTextWithShadow(mc.textRenderer,n,x+7,y+40,0xFFFFFF);
+            if(processando)ctx.drawTextWithShadow(mc.textRenderer,"Reconhecendo voz...",x,y+62,0x9BD8FF);
             if(gravando)ctx.drawTextWithShadow(mc.textRenderer,"● GRAVANDO LOCALMENTE",x,y+62,(ticks/5)%2==0?0xFF5555:0xFFAAAA);
         });
     }
@@ -53,11 +55,23 @@ public final class VozCliente implements ClientModInitializer {
         boolean f=habilitado&&pressionada(mc,voz);
         if(!habilitado){BufferVoz.cancelar();gravando=false;bloqueio=true;}
         if(habilitado&&!f)bloqueio=false;
-        if(f&&!gravando&&!bloqueio){BufferVoz.iniciar();gravando=true;inicio=ticks;}
+        if(f&&!gravando&&!bloqueio&&!processando&&ClientPlayNetworking.canSend(VozDaCriacao.PEDIR)){BufferVoz.iniciar();gravando=true;inicio=ticks;}
         if(gravando&&(!f||ticks-inicio>=300)){
             short[] pcm=BufferVoz.finalizar();gravando=false;bloqueio=f;
-            mc.player.sendMessage(Text.literal(pcm.length==0?"§eSem áudio. Confira o microfone do Simple Voice Chat.":String.format(Locale.ROOT,"§aVoz capturada: %.1f s. Teste local; áudio descartado.",pcm.length/(double)BufferVoz.TAXA)),true);
-            Arrays.fill(pcm,(short)0);
+            if(pcm.length<4800){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eSem áudio suficiente. Configure o microfone e a ativação do Simple Voice Chat."),true);}
+            else {
+                processando=true;long g=++geracao;
+                ReconhecedorVoz.transcrever(pcm).whenComplete((frase,erro)->mc.execute(()->{
+                    if(g!=geracao)return;
+                    processando=false;
+                    if(mc.player==null||!ClientPlayNetworking.canSend(VozDaCriacao.PEDIR))return;
+                    if(erro!=null){mc.player.sendMessage(Text.literal("§eFalha no reconhecimento local. Veja latest.log."),false);return;}
+                    if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
+                    String texto=frase.substring(0,Math.min(frase.length(),240));
+                    mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);
+                    var b=PacketByteBufs.create();b.writeString(texto,240);ClientPlayNetworking.send(VozDaCriacao.PEDIR,b);
+                }));
+            }
         }
         boolean g=habilitado&&pressionada(mc,sugar)&&ClientPlayNetworking.canSend(VozDaCriacao.SUGAR);
         if(ClientPlayNetworking.canSend(VozDaCriacao.SUGAR)&&(g!=sugando||(g&&ticks%4==0))){var b=PacketByteBufs.create();b.writeBoolean(g);ClientPlayNetworking.send(VozDaCriacao.SUGAR,b);}
@@ -77,5 +91,5 @@ public final class VozCliente implements ClientModInitializer {
         if(t.getCategory()==InputUtil.Type.MOUSE)return GLFW.glfwGetMouseButton(h,t.getCode())==GLFW.GLFW_PRESS;
         return b.isPressed();
     }
-    private static void limpar(){BufferVoz.cancelar();gravando=false;sugando=false;bloqueio=false;materia=0;custo=0;pedido="Nenhum";fragmentos.clear();}
+    private static void limpar(){geracao++;processando=false;BufferVoz.cancelar();gravando=false;sugando=false;bloqueio=false;materia=0;custo=0;pedido="Nenhum";fragmentos.clear();}
 }
