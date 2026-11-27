@@ -33,6 +33,24 @@ public final class VozCliente implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((h,c)->limpar());
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.HUD,(c,h,b,s)->{int m=b.readVarInt(),k=b.readVarInt();String n=b.readString(80);c.execute(()->{materia=m;custo=k;pedido=n;});});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(ConfigLaCraft.obter().particulas&&fragmentos.size()<250)fragmentos.add(new Fragmento(o,e,id,ticks));});});
+        ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.SOM,(c,h,b,s)->{
+            var pos=b.readBlockPos();int tipo=b.readUnsignedByte();
+            c.execute(()->{
+                if(c.world==null||!ConfigLaCraft.obter().sons)return;
+                var evento=switch(tipo){
+                    case 0->net.minecraft.sound.SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP;
+                    case 1->net.minecraft.sound.SoundEvents.BLOCK_BEACON_ACTIVATE;
+                    case 2->net.minecraft.sound.SoundEvents.BLOCK_AMETHYST_BLOCK_PLACE;
+                    case 3->net.minecraft.sound.SoundEvents.ENTITY_PLAYER_LEVELUP;
+                    case 4->net.minecraft.sound.SoundEvents.BLOCK_DISPENSER_FAIL;
+                    default->null;
+                };
+                if(evento==null)return;
+                float volume=tipo==0?0.32f:tipo==2?0.42f:0.65f;
+                float pitch=tipo==0?1.25f+c.world.getRandom().nextFloat()*0.35f:tipo==2?1.15f:1f;
+                c.world.playSound(pos.getX()+0.5,pos.getY()+0.5,pos.getZ()+0.5,evento,net.minecraft.sound.SoundCategory.PLAYERS,volume,pitch,false);
+            });
+        });
         HudRenderCallback.EVENT.register((ctx,delta)->{
             var mc=MinecraftClient.getInstance();
             if(!ConfigLaCraft.obter().hud||mc.player==null||mc.options.hudHidden||!ClientPlayNetworking.canSend(VozDaCriacao.SUGAR))return;

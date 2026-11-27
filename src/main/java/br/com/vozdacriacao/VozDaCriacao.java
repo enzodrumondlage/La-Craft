@@ -21,7 +21,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 import static net.minecraft.server.command.CommandManager.argument;
 
 public final class VozDaCriacao implements ModInitializer {
-    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir");
+    public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir"),SOM=id("som");
     private static final Map<UUID,Sessao> sessoes=new HashMap<>();
     private static final Set<Block> PERMITIDOS=Set.of(Blocks.DIRT,Blocks.GRASS_BLOCK,Blocks.COARSE_DIRT,Blocks.STONE,Blocks.COBBLESTONE,Blocks.SAND,Blocks.RED_SAND,Blocks.GRAVEL,Blocks.ANDESITE,Blocks.DIORITE,Blocks.GRANITE,Blocks.DEEPSLATE,Blocks.NETHERRACK,Blocks.END_STONE);
     private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;MotorCriacao.Obra obra;}
@@ -92,7 +92,12 @@ public final class VozDaCriacao implements ModInitializer {
             if(s.obra!=null){
                 if(!p.isAlive()||p.getServerWorld()!=s.obra.mundo||p.isSpectator()||!p.getAbilities().allowModifyWorld){
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
-                }else if(s.obra.tick(p)){MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;p.sendMessage(Text.literal("§aConstrução concluída ou interrompida por obstáculos."),true);}
+                }else if(s.obra.tick(p)){
+                    boolean completa=s.obra.completa();
+                    MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
+                    som(p.getServerWorld(),p.getBlockPos(),completa?3:4);
+                    p.sendMessage(Text.literal(completa?"§aDesejo realizado!":"§eConstrução interrompida por obstáculos."),true);
+                }
             }
             if(t%4!=0||!p.isAlive()||!ServerPlayNetworking.canSend(p,HUD))continue;
             if(ConfigLaCraft.obter().sugar&&s.ativo&&t<=s.ate&&!p.isSpectator()&&p.getAbilities().allowModifyWorld)sugar(server,p);
@@ -104,6 +109,7 @@ public final class VozDaCriacao implements ModInitializer {
                 var resultado=MotorCriacao.iniciar(p,pedido);
                 if(resultado.sucesso()){
                     m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();
+                    som(p.getServerWorld(),p.getBlockPos(),s.obra==null?3:1);
                     p.sendMessage(Text.literal("§aMaterializando: "+pedido.nome()),false);
                 }else p.sendMessage(Text.literal("§eEspaço insuficiente. Nada foi cobrado; faça o pedido em área aberta."),false);
                 hud(server,p);
@@ -132,6 +138,14 @@ public final class VozDaCriacao implements ModInitializer {
                 if(q.squaredDistanceTo(p)>1024||!ServerPlayNetworking.canSend(q,EFEITO))continue;
                 PacketByteBuf buf=PacketByteBufs.create();buf.writeBlockPos(pos);buf.writeVarInt(Block.getRawIdFromState(b));buf.writeVarInt(p.getId());ServerPlayNetworking.send(q,EFEITO,buf);
             }
+        }
+        if(n>0)som(w,p.getBlockPos(),0);
+    }
+    /** Um evento sonoro por lote, não por bloco; preferência individual no cliente. */
+    static void som(ServerWorld w,BlockPos pos,int tipo){
+        for(ServerPlayerEntity q:w.getPlayers()){
+            if(q.getPos().squaredDistanceTo(Vec3d.ofCenter(pos))>1024||!ServerPlayNetworking.canSend(q,SOM))continue;
+            var b=PacketByteBufs.create();b.writeBlockPos(pos);b.writeByte(tipo);ServerPlayNetworking.send(q,SOM,b);
         }
     }
     private static void hud(MinecraftServer server,ServerPlayerEntity p){

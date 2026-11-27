@@ -14,6 +14,7 @@ public final class ConfigLaCraft {
     public boolean coletarMateria=true;
     public boolean hud=true;
     public boolean particulas=true;
+    public boolean sons=true;
     public boolean voz=true;
     public boolean sugar=true;
     public int velocidadeSugador=3;

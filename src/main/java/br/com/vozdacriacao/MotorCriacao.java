@@ -17,18 +17,22 @@ public final class MotorCriacao {
         return !w.isOutOfHeightLimit(pos)&&w.isChunkLoaded(pos.getX()>>4,pos.getZ()>>4)&&w.canPlayerModifyAt(p,pos)&&w.getBlockState(pos).isAir()&&!p.getBoundingBox().intersects(new Box(pos))&&w.getOtherEntities(null,new Box(pos)).isEmpty();
     }
     public static final class Obra {
-        final ServerWorld mundo;private final List<Voxel> voxels;private final int custo;private int i,colocados;
+        final ServerWorld mundo;private final List<Voxel> voxels;private final int custo;private int i,colocados,tempo;
         Obra(ServerWorld w,List<Voxel> v,int c){mundo=w;voxels=v;custo=c;}
         boolean tick(ServerPlayerEntity p){
+            tempo++;
             for(int n=0;n<ConfigLaCraft.obter().velocidadeConstrucao&&i<voxels.size();n++){
                 Voxel v=voxels.get(i++);
                 if(!livre(mundo,p,v.pos()))return true;
                 if(mundo.setBlockState(v.pos(),v.estado(),Block.NOTIFY_ALL)){
-                    colocados++;mundo.spawnParticles(ParticleTypes.END_ROD,v.pos().getX()+.5,v.pos().getY()+.5,v.pos().getZ()+.5,2,.3,.3,.3,.02);
+                    colocados++;
+                    if(n==0&&tempo%4==1)VozDaCriacao.som(mundo,v.pos(),2);
+                    mundo.spawnParticles(ParticleTypes.END_ROD,v.pos().getX()+.5,v.pos().getY()+.5,v.pos().getZ()+.5,2,.3,.3,.3,.02);
                 }else return true;
             }
             return i>=voxels.size();
         }
+        boolean completa(){return colocados==voxels.size();}
         int reembolso(){return custo-(int)Math.ceil(custo*(colocados/(double)voxels.size()));}
     }
     public static Resultado iniciar(ServerPlayerEntity p,Pedido pedido){

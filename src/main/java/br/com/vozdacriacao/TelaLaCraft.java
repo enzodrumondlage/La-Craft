@@ -30,7 +30,9 @@ public final class TelaLaCraft extends Screen {
         if(pagina==0){
             var materia=botao(x,y,w,"Precisar coletar blocos: "+sn(rascunho.coletarMateria),()->{rascunho.coletarMateria=!rascunho.coletarMateria;atualizar();});materia.active=!remoto;
             botao(x,y+22,w,"Exibir HUD: "+sn(rascunho.hud),()->{rascunho.hud=!rascunho.hud;atualizar();});
-            botao(x,y+44,w,"Partículas de absorção: "+sn(rascunho.particulas),()->{rascunho.particulas=!rascunho.particulas;atualizar();});
+            int parcial=(w-4)/2;
+            botao(x,y+44,parcial,"Partículas: "+sn(rascunho.particulas),()->{rascunho.particulas=!rascunho.particulas;atualizar();});
+            botao(x+parcial+4,y+44,w-parcial-4,"Sons: "+sn(rascunho.sons),()->{rascunho.sons=!rascunho.sons;atualizar();});
             botao(x,y+66,w,"Microfone: "+sn(rascunho.voz),()->{rascunho.voz=!rascunho.voz;atualizar();});
             var sugar=botao(x,y+88,w,"Sugador habilitado: "+sn(rascunho.sugar),()->{rascunho.sugar=!rascunho.sugar;atualizar();});sugar.active=!remoto;
             int metade=(w-4)/2;
