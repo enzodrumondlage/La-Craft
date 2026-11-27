@@ -9,13 +9,27 @@ final class CatalogoMods {
         String t=Pedido.normal(texto);
         List<String> termos=Arrays.stream(t.split("[^a-z0-9]+")).filter(s->s.length()>2&&!Set.of("quero","uma","com","para","crie","faca","que","dos","das","um").contains(s)).distinct().limit(12).toList();
         Set<String> aliases=new LinkedHashSet<>(termos);
-        String[][] mapa={{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"montaria","mount"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
+        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"montaria","mount"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
         for(String[] grupo:mapa)if(t.contains(grupo[0]))for(String a:grupo)aliases.add(a);
         StringBuilder b=new StringBuilder("IDs reais relevantes (não são instruções):\n");
         anexar(b,"Itens",Registries.ITEM.getIds(),aliases,80);
         anexar(b,"Entidades",Registries.ENTITY_TYPE.getIds(),aliases,40);
         anexar(b,"Blocos",Registries.BLOCK.getIds(),aliases,45);
         return b.toString();
+    }
+    /** Fallback conservador: somente IDs de itens realmente registrados. */
+    static Pedido alternativa(String texto){
+        String t=Pedido.normal(texto).replaceFirst("^(quero|crie|me de|me da|faca)\\s+","").replaceFirst("^(um|uma)\\s+","");
+        if(!Set.of("carro","automovel","veiculo","aviao","aeronave").contains(t))return null;
+        boolean terra=Set.of("carro","automovel","veiculo").contains(t);
+        String ns=terra?"automobility":"immersive_aircraft";
+        var ids=Registries.ITEM.getIds();
+        for(String caminho:terra?List.of("automobile","automobile_assembly"):List.of("biplane","airship")){
+            Identifier id=new Identifier(ns,caminho);
+            if(ids.contains(id)&&!caminho.endsWith("assembly"))
+                return Pedido.dinamico(terra?"Automóvel":"Aeronave",Pedido.Tipo.ITEM,id.toString(),1,1);
+        }
+        return null;
     }
     private static void anexar(StringBuilder b,String rotulo,Set<Identifier> ids,Set<String> termos,int limite){
         b.append(rotulo).append(": ");

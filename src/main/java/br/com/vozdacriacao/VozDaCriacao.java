@@ -80,6 +80,7 @@ public final class VozDaCriacao implements ModInitializer {
         Pedido pedido;
         try{pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
+        Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA&&!IAConstrucoes.ativo()){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
         boolean usarIA=true;
@@ -92,8 +93,9 @@ public final class VozDaCriacao implements ModInitializer {
                 if(sessoes.get(p.getUuid())!=s||s.geracao!=geracao)return;
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
-                    s.pedido=erro==null?plano:null;
-                    if(s.pedido==null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)),false);
+                    s.pedido=erro==null?plano:alternativa;
+                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+(alternativa!=null?" Alternativa local limitada selecionada.":"")),false);
+                    else if(s.pedido==null)p.sendMessage(Text.literal("§ePlano indisponível."),false);
 
                 }
                 hud(server,p);

@@ -15,7 +15,8 @@
     "lithium",
     "ferrite-core",
     "mutant-monsters",
-    "structure-pool-api"
+    "structure-pool-api",
+    "porting_lib"
   ],
   "expansao": [
     "bosses-of-mass-destruction",
@@ -59,5 +60,10 @@
     "sound-physics-remastered",
     "notenoughanimations",
     "effective"
-  ]
+  ],
+  "pins": {
+    "fabric-api": "UapVHwiP",
+    "structure-pool-api": "y5a2WAp4",
+    "porting_lib": "un3RTcAA"
+  }
 }

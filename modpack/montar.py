@@ -9,7 +9,7 @@ def get(path):
     if path not in CACHE:
         for attempt in range(3):
             try:
-                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.8.0 (GitHub modpack builder)"})
+                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.8.1 (GitHub modpack builder)"})
                 with urllib.request.urlopen(req,timeout=45) as r: CACHE[path]=json.load(r)
                 break
             except (OSError,ValueError):
@@ -21,11 +21,16 @@ def versions(project):
     q=urllib.parse.urlencode({"loaders":json.dumps(["fabric"]),"game_versions":json.dumps([MC])})
     return [v for v in get("project/"+project+"/version?"+q) if compatible(v)]
 chosen={}
+# Bibliotecas escolhidas explicitamente devido às restrições observadas no Fabric Loader.
+pins={get('project/'+slug)['id']:vid for slug,vid in CFG.get('pins',{}).items()}
 exact={}
 visiting=set()
 def select(project,version=None):
     p=get("project/"+project)
     pid=p["id"]
+    if pid in pins:
+        if version and version!=pins[pid]: print("Ajuste de biblioteca:",p["slug"],version,"->",pins[pid])
+        version=pins[pid]
     if version:
         v=get("version/"+version)
         if v["project_id"]!=pid or not compatible(v): raise ValueError("Dependência incompatível: "+pid+" "+version)
@@ -58,7 +63,7 @@ def validar():
             vid=dep.get("version_id")
             target=dep.get("project_id") or (get("version/"+vid)["project_id"] if vid else None)
             if dep["dependency_type"]=="required":
-                if target not in chosen or (vid and chosen[target][1]["id"]!=vid): raise ValueError("Dependência não satisfeita: "+p["slug"])
+                if target not in chosen or (vid and target not in pins and chosen[target][1]["id"]!=vid): raise ValueError("Dependência não satisfeita: "+p["slug"])
             if dep["dependency_type"]=="incompatible" and target in chosen and (not vid or chosen[target][1]["id"]==vid):
                 raise ValueError("Conflito declarado: "+p["slug"]+" / "+target)
 
@@ -93,12 +98,12 @@ for p,v in sorted(chosen.values(),key=lambda a:a[0]["slug"]):
 jar=pathlib.Path(sys.argv[1])
 assert jar.is_file()
 out=pathlib.Path("dist");out.mkdir(exist_ok=True)
-index={"formatVersion":1,"game":"minecraft","versionId":"0.8.0-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
-mrpack=out/"La-Craft-Infinite-0.8.0-EXPANDIDO.mrpack"
+index={"formatVersion":1,"game":"minecraft","versionId":"0.8.1-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
+mrpack=out/"La-Craft-Infinite-0.8.1-EXPANDIDO.mrpack"
 with zipfile.ZipFile(mrpack,"w",zipfile.ZIP_DEFLATED) as z:
     z.writestr("modrinth.index.json",json.dumps(index,ensure_ascii=False,indent=2))
     z.write(jar,"overrides/mods/"+jar.name)
-with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.0-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.1-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
     z.write(mrpack,mrpack.name)
     z.writestr("expansao.json",json.dumps(expansao,ensure_ascii=False,indent=2))
     z.writestr("mods-lock.json",json.dumps(lock,ensure_ascii=False,indent=2))

@@ -41,6 +41,7 @@ public final class TelaLaCraft extends Screen {
         }else if(pagina==3){
             var q=botao(x,y,w,"Construções: "+java.util.List.of("Simples","Detalhada","Avançada","Ultra").get(rascunho.qualidadeCasa-1),()->{rascunho.qualidadeCasa=rascunho.qualidadeCasa%4+1;atualizar();});q.active=!remoto;
             botao(x,y+22,w,"Volume La Craft: "+rascunho.volumeSons+"%",()->{rascunho.volumeSons=rascunho.volumeSons>=100?0:Math.min(100,rascunho.volumeSons+20);atualizar();});
+            botao(x,y+66,w,"Testar Ollama",()->{aviso="Testando serviço local...";TesteOllama.testar(rascunho.modelo).thenAccept(msg->{if(client!=null)client.execute(()->{aviso=msg;});});});
             botao(x,y+44,w,"Gerar relatório de diagnóstico",()->{aviso=DiagnosticoLaCraft.gerar()?"Relatório salvo em config/lacraft-diagnostico.txt":"Falha ao salvar relatório";atualizar();});
         }else if(pagina==2){
             var chat=botao(x,y,w,"Desejos pelo chat: "+sn(rascunho.chatDesejos),()->{rascunho.chatDesejos=!rascunho.chatDesejos;atualizar();});chat.active=!remoto;
