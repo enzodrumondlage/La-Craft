@@ -42,9 +42,9 @@ with concurrent.futures.ThreadPoolExecutor(max_workers=6) as pool:
             allmods.extend(future.result()); print("JAR verificado:",futures[future],flush=True)
         except Exception as exc: failures.append(futures[future]+": "+str(exc))
 for n,data in own: allmods.extend(inspect(data,n))
-report={"manifest_entries":len(index["files"]),"root_jars":sum(m["root"] for m in allmods),"metadata":allmods,"errors":failures,"limitations":"Auditoria estática; não testa mixins em execução, FPS, renderização ou lógica dos mods."}
+report={"manifest_entries":len(index["files"]),"root_jars":sum(m["root"] for m in allmods),"metadata":allmods,"errors":failures,"limitations":"Auditoria estática do perfil cliente (inclui singleplayer/LAN integrado); servidor dedicado não validado; não testa mixins em execução, FPS, renderização ou lógica dos mods."}
 rows=[]
-for side in ("client","server"):
+for side in ("client",):
     active=[m for m in allmods if m["environment"] in ("*",side)]
     byid={}
     for m in active:
