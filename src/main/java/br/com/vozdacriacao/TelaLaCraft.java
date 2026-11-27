@@ -38,6 +38,10 @@ public final class TelaLaCraft extends Screen {
             int metade=(w-4)/2;
             var s=botao(x,y+110,metade,"Absorção: "+rascunho.velocidadeSugador,()->{rascunho.velocidadeSugador=rascunho.velocidadeSugador%6+1;atualizar();});s.active=!remoto;
             var c=botao(x+metade+4,y+110,w-metade-4,"Construção: "+rascunho.velocidadeConstrucao,()->{rascunho.velocidadeConstrucao=rascunho.velocidadeConstrucao>=16?2:rascunho.velocidadeConstrucao+2;atualizar();});c.active=!remoto;
+        }else if(pagina==3){
+            var q=botao(x,y,w,"Construções: "+java.util.List.of("Simples","Detalhada","Avançada","Ultra").get(rascunho.qualidadeCasa-1),()->{rascunho.qualidadeCasa=rascunho.qualidadeCasa%4+1;atualizar();});q.active=!remoto;
+            botao(x,y+22,w,"Volume La Craft: "+rascunho.volumeSons+"%",()->{rascunho.volumeSons=rascunho.volumeSons>=100?0:Math.min(100,rascunho.volumeSons+20);atualizar();});
+            botao(x,y+44,w,"Gerar relatório de diagnóstico",()->{aviso=DiagnosticoLaCraft.gerar()?"Relatório salvo em config/lacraft-diagnostico.txt":"Falha ao salvar relatório";atualizar();});
         }else if(pagina==2){
             var chat=botao(x,y,w,"Desejos pelo chat: "+sn(rascunho.chatDesejos),()->{rascunho.chatDesejos=!rascunho.chatDesejos;atualizar();});chat.active=!remoto;
             var todos=botao(x,y+22,w,"Interpretar todo o chat: "+sn(rascunho.chatTodos),()->{rascunho.chatTodos=!rascunho.chatTodos;atualizar();});todos.active=!remoto;
@@ -62,7 +66,7 @@ public final class TelaLaCraft extends Screen {
             var apagar=botao(x,y+116,w,"Apagar chave salva",()->{if(chave!=null)chave.setText("");rascunho.chaveApi="";atualizar();});apagar.active=!remoto;
         }
         int rodape=height-26,metade=(w-8)/3;
-        botao(x,rodape,metade,pagina==0?"IA >":pagina==1?"Chat >":"< Jogo",()->{capturar();pagina=(pagina+1)%3;atualizar();});
+        botao(x,rodape,metade,pagina==0?"IA >":pagina==1?"Chat >":pagina==2?"Extras >":"< Jogo",()->{capturar();pagina=(pagina+1)%4;atualizar();});
         botao(x+metade+4,rodape,metade,"Salvar",()->{capturar();if(ConfigLaCraft.salvar(rascunho)){close();}else{aviso="Erro ao salvar.";atualizar();}});
         botao(x+2*(metade+4),rodape,w-2*(metade+4),"Cancelar",this::close);
     }

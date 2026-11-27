@@ -1,0 +1,16 @@
+package br.com.vozdacriacao;
+public final class ResidenciaTest {
+    static void check(boolean b){if(!b)throw new AssertionError();}
+    static long count(Pedido p,String b){return p.celulas().stream().filter(c->c.bloco().equals(b)).count();}
+    public static void main(String[] args){
+        var a=Residencia.interpretar("casa moderna com cama baú e fornalha",4);
+        check(a!=null);check(a.custo()==a.celulas().size());check(count(a,"porta_baixo")==1&&count(a,"porta_cima")==1);
+        check(count(a,"cama_pe")==1&&count(a,"cama_cabeca")==1);check(count(a,"bau")>=1&&count(a,"crafting_table")==1&&count(a,"fornalha")==1&&count(a,"glass")>0);
+        var m=Residencia.interpretar("mansão com dois quartos",4);check(m!=null&&count(m,"cama_pe")==2&&m.celulas().size()<3500);
+        check(Residencia.interpretar("mansão com piscina",4)==null);
+        check(Pedido.pedidoChat("mansão com dois quartos e camas"));
+        check(!Pedido.pedidoChat("oi tudo bem"));
+        check(!AudioLimpo.preparar(new short[4800]));short[] onda=new short[4800];for(int i=0;i<onda.length;i++)onda[i]=(short)(200*Math.sin(i*.2));check(AudioLimpo.preparar(onda));
+        System.out.println("Residência, chat e áudio: testes aprovados");
+    }
+}

@@ -36,3 +36,6 @@ Artefatos registrados com NBT persistente, cor de renderização e até cinco ef
 
 ## La Craft Infinite — pacote experimental
 O workflow também resolve os projetos listados em `modpack/projetos.json`, com dependências obrigatórias, versão Minecraft/Fabric, hashes e verificação de conflitos declarados. Importar o `.mrpack` pelo Prism Launcher ou Modrinth App; não redistribuímos JARs de terceiros sem verificar as licenças. A IA recebe uma lista limitada de IDs reais relevantes dos registros de itens, entidades e blocos. Isso não implementa APIs específicas dos mods nem garante combinação de habilidades. O pacote ainda necessita teste de inicialização e multiplayer.
+
+## 0.8.0 experimental
+Residências com portas, janelas, cama, baú, bancada, fornalha, iluminação, telhado e opção de dois quartos; quatro estilos/níveis de detalhe. O executor usa estados de blocos explícitos. Ainda requer teste de portas e camas em jogo. Piscina, garagem, múltiplos andares e edição de construções não implementados. Chat aceita pedidos residenciais longos. IA revisa uma resposta inválida uma vez; sem substituição automática por desejo diferente. Voz até 30 s, medidor, normalização e rejeição de silêncio; não é novo modelo de reconhecimento. Menu Extras inclui qualidade, volume e relatório sem dados privados. Testes de planta e áudio sintético não equivalem a teste em jogo.

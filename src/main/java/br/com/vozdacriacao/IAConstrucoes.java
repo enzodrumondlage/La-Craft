@@ -19,6 +19,7 @@ public final class IAConstrucoes {
         Responda somente um objeto JSON: {"nome":"nome curto","caixas":[{"x1":-2,"y1":0,"z1":-2,"x2":2,"y2":4,"z2":2,"bloco":"stone_bricks","oco":true}]}.
         Use até 64 caixas, no máximo 1500 voxels únicos. Coordenadas inteiras x,z entre -6 e 6, y de 0 a 20, mínimos antes dos máximos.
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
+        Para casas e mansões mobiliadas use {"nome":"Casa moderna","tipo":"residencia","grande":false,"estilo":"moderno","qualidade":4}. Estilos rustico, moderno, medieval, luxuoso; qualidade 1 a 4. grande=true produz dois quartos. A planta inclui portas, camas, baús, iluminação, janelas, bancada e fornalha. Não use este tipo para piscinas, garagens, outros andares ou detalhes que não estejam disponíveis.
         Para itens existentes use {"nome":"nome","tipo":"item","id":"minecraft:diamond","quantidade":8}.
         Para mobs existentes use {"nome":"nome","tipo":"mob","id":"minecraft:piglin","quantidade":1,"escala":3}; escala de 1 a 4, quantidade 1 a 8.
         Para um item mágico combinável use {"nome":"Cristal do oceano","tipo":"artefato","cor":"#33AAFF","efeitos":["respirar","cura","brilho"],"duracao":30,"recarga":5}. Efeitos válidos: cura, respirar, velocidade, salto, invisivel, resistencia, levitacao, brilho, nuvem, musica. Combine até 5 efeitos. Duração em segundos 5 a 120, recarga 2 a 30. Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
@@ -35,9 +36,11 @@ public final class IAConstrucoes {
         final ConfigLaCraft cfg=ConfigLaCraft.obter().copia();
         return CompletableFuture.supplyAsync(()->{
             try{
+                for(int tentativa=0;tentativa<2;tentativa++){
+                String pedidoTexto=tentativa==0?texto:texto+"\nRevise o esquema: devolva um único objeto JSON válido, sem Markdown, com campos e limites corretos.";
                 JsonObject req=new JsonObject();
                 req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");
-                req.addProperty("prompt",texto);req.addProperty("stream",false);req.addProperty("format","json");
+                req.addProperty("prompt",pedidoTexto);req.addProperty("stream",false);req.addProperty("format","json");
                 JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",2048);req.add("options",opts);
                 boolean nuvem=cfg.provedor.equals("OPENAI");
                 HttpRequest.Builder builder;
@@ -46,7 +49,7 @@ public final class IAConstrucoes {
                     JsonObject payload=new JsonObject();payload.addProperty("model",cfg.modelo);
                     JsonArray msgs=new JsonArray();
                     JsonObject sys=new JsonObject();sys.addProperty("role","system");sys.addProperty("content",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");msgs.add(sys);
-                    JsonObject user=new JsonObject();user.addProperty("role","user");user.addProperty("content",texto);msgs.add(user);payload.add("messages",msgs);
+                    JsonObject user=new JsonObject();user.addProperty("role","user");user.addProperty("content",pedidoTexto);msgs.add(user);payload.add("messages",msgs);
                     JsonObject formato=new JsonObject();formato.addProperty("type","json_object");payload.add("response_format",formato);
                     payload.addProperty("max_completion_tokens",2048);req=payload;
                     builder=HttpRequest.newBuilder(URI.create("https://api.openai.com/v1/chat/completions")).header("Authorization","Bearer "+ConfigLaCraft.chave(cfg));
@@ -58,11 +61,25 @@ public final class IAConstrucoes {
                     byte[] b=in.readNBytes(65537);if(b.length>65536)throw new IllegalArgumentException("Resposta muito grande");
                     JsonObject body=JsonParser.parseString(new String(b,StandardCharsets.UTF_8)).getAsJsonObject();
                     String json=nuvem?body.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString():body.get("response").getAsString();
-                    return validar(json);
+                    try{return validar(json);}catch(RuntimeException ex){if(tentativa==1)throw new IllegalArgumentException("Plano inválido após revisão");}
                 }
+                }
+                throw new IllegalArgumentException("Plano inválido");
             }catch(Exception e){throw new CompletionException(e);}
             finally{OCUPADO.set(false);}
         },WORK);
+    }
+    static String diagnostico(Throwable erro){
+        if(erro==null)return "A IA não retornou um plano válido.";
+        Throwable e=erro;while(e.getCause()!=null&&e.getCause()!=e)e=e.getCause();
+        String m=e.getMessage()==null?"":e.getMessage();
+        if(m.contains("HTTP 401")||m.contains("HTTP 403"))return "API sem autorização. Verifique a chave e permissões.";
+        if(m.contains("HTTP 429"))return "Limite de uso da API atingido.";
+        if(m.contains("HTTP 404"))return "Modelo não encontrado. Confira o modelo escolhido.";
+        if(m.contains("HTTP 5"))return "Serviço de IA indisponível.";
+        if(e instanceof java.net.http.HttpTimeoutException)return "A IA demorou demais para responder.";
+        if(e instanceof java.io.IOException)return "Não foi possível conectar à IA. Verifique o serviço.";
+        return "A IA retornou um plano inválido mesmo após a revisão. Nenhuma matéria foi consumida.";
     }
     static Pedido validar(String json){
         if(json.length()>32768)throw new IllegalArgumentException("JSON grande demais");
@@ -72,6 +89,10 @@ public final class IAConstrucoes {
         nome=nome.substring(0,Math.min(48,nome.length()));
         if(plano.has("tipo")){
             String tipo=plano.get("tipo").getAsString();
+            if(tipo.equals("residencia")){
+                if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");
+                return Residencia.planejar(nome,plano.get("grande").getAsBoolean(),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
+            }
             if(tipo.equals("artefato"))return ArtefatoSpec.validar(nome,plano);
             if(tipo.equals("item")||tipo.equals("mob")){
                 Pedido.Tipo t=tipo.equals("item")?Pedido.Tipo.ITEM:Pedido.Tipo.MOB;

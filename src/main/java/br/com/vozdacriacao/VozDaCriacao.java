@@ -75,10 +75,12 @@ public final class VozDaCriacao implements ModInitializer {
     }
     private static int pedir(MinecraftServer server,ServerPlayerEntity p,String texto){
         Sessao s=sessao(p);
-        if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null)return 0;
+        if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null){p.sendMessage(Text.literal("§eNão é possível criar agora: construção em andamento ou sem permissão."),true);return 0;}
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
         Pedido pedido;
-        try{pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
+        try{pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
+        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
+        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA&&!IAConstrucoes.ativo()){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
@@ -91,7 +93,7 @@ public final class VozDaCriacao implements ModInitializer {
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
                     s.pedido=erro==null?plano:null;
-                    if(s.pedido==null)p.sendMessage(Text.literal("§eA IA não retornou uma construção válida. Tente outro pedido."),false);
+                    if(s.pedido==null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)),false);
 
                 }
                 hud(server,p);
@@ -99,7 +101,7 @@ public final class VozDaCriacao implements ModInitializer {
             return 1;
         }
         s.geracao++;s.gerando=false;
-        if(pedido==null){p.sendMessage(Text.literal("§ePedido não reconhecido. Ative uma IA generativa no menu ou use IDs de itens/mobs."),false);return 0;}
+        if(pedido==null){p.sendMessage(Text.literal("§ePedido não suportado no modo local. Ative uma IA generativa em Mods > La Craft > IA."),false);return 0;}
         s.pedido=pedido;hud(server,p);return 1;
     }
     private static void tick(MinecraftServer server){

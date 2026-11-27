@@ -51,7 +51,7 @@ public final class VozCliente implements ClientModInitializer {
                 if(evento==null)return;
                 float volume=tipo==0?0.32f:tipo==2?0.42f:0.65f;
                 float pitch=tipo==0?1.25f+c.world.getRandom().nextFloat()*0.35f:tipo==2?1.15f:1f;
-                c.world.playSound(pos.getX()+0.5,pos.getY()+0.5,pos.getZ()+0.5,evento,net.minecraft.sound.SoundCategory.PLAYERS,volume,pitch,false);
+                c.world.playSound(pos.getX()+0.5,pos.getY()+0.5,pos.getZ()+0.5,evento,net.minecraft.sound.SoundCategory.PLAYERS,volume*ConfigLaCraft.obter().volumeSons/100f,pitch,false);
             });
         });
         HudRenderCallback.EVENT.register((ctx,delta)->{
@@ -66,7 +66,7 @@ public final class VozCliente implements ClientModInitializer {
             String n=custo>0?"Pedido: "+pedido:(!pedido.equals("Nenhum")?pedido:"G: sugar | F: voz | /lacraft");
             ctx.drawTextWithShadow(mc.textRenderer,n,x+7,y+40,0xFFFFFF);
             if(processando)ctx.drawTextWithShadow(mc.textRenderer,"Reconhecendo voz...",x,y+62,0x9BD8FF);
-            if(gravando)ctx.drawTextWithShadow(mc.textRenderer,"● GRAVANDO LOCALMENTE",x,y+62,(ticks/5)%2==0?0xFF5555:0xFFAAAA);
+            if(gravando){ctx.drawTextWithShadow(mc.textRenderer,"● GRAVANDO LOCALMENTE",x,y+62,(ticks/5)%2==0?0xFF5555:0xFFAAAA);ctx.fill(x,y+74,x+100,y+78,0xFF414855);ctx.fill(x,y+74,x+(int)(100*Math.min(1,BufferVoz.nivel()*8)),y+78,0xFF4DE29C);}
         });
     }
     private static void tick(MinecraftClient mc){
@@ -77,9 +77,9 @@ public final class VozCliente implements ClientModInitializer {
         if(!habilitado){BufferVoz.cancelar();gravando=false;bloqueio=true;}
         if(habilitado&&!f)bloqueio=false;
         if(f&&!gravando&&!bloqueio&&!processando&&ClientPlayNetworking.canSend(VozDaCriacao.PEDIR)){BufferVoz.iniciar();gravando=true;inicio=ticks;}
-        if(gravando&&(!f||ticks-inicio>=300)){
+        if(gravando&&(!f||ticks-inicio>=600)){
             short[] pcm=BufferVoz.finalizar();gravando=false;bloqueio=f;
-            if(pcm.length<4800){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eSem áudio suficiente. Configure o microfone e a ativação do Simple Voice Chat."),true);}
+            if(!AudioLimpo.preparar(pcm)){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eÁudio muito baixo ou silencioso. Configure o microfone e a ativação do Simple Voice Chat."),true);}
             else {
                 processando=true;long g=++geracao;
                 (ConfigLaCraft.obter().vozNuvem&&ConfigLaCraft.obter().permitirNuvem&&!ConfigLaCraft.chave(ConfigLaCraft.obter()).isBlank()?VozNuvem.transcrever(pcm):ReconhecedorVoz.transcrever(pcm)).whenComplete((frase,erro)->mc.execute(()->{
@@ -90,7 +90,7 @@ public final class VozCliente implements ClientModInitializer {
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
                     String texto=frase.substring(0,Math.min(frase.length(),240));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);
-                    if(ConfigLaCraft.obter().confirmarVoz){mc.setScreen(new ConfirmarVoz(texto));return;}
+                    if(ConfigLaCraft.obter().confirmarVoz){if(mc.currentScreen==null)mc.setScreen(new ConfirmarVoz(texto));else mc.player.sendMessage(Text.literal("§eFrase não enviada: feche o menu e repita ou escreva no chat."),false);return;}
                     var b=PacketByteBufs.create();b.writeString(texto,240);ClientPlayNetworking.send(VozDaCriacao.PEDIR,b);
                 }));
             }

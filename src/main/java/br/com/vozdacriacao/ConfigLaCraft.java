@@ -19,6 +19,8 @@ public final class ConfigLaCraft {
     public boolean chatTodos=false;
     public boolean vozNuvem=false;
     public boolean confirmarVoz=true;
+    public int qualidadeCasa=4;
+    public int volumeSons=80;
     public boolean voz=true;
     public boolean sugar=true;
     public int velocidadeSugador=3;
@@ -30,6 +32,7 @@ public final class ConfigLaCraft {
     public static ConfigLaCraft obter(){return atual;}
     public ConfigLaCraft copia(){return GSON.fromJson(GSON.toJson(this),ConfigLaCraft.class);}
     private void validar(){
+        qualidadeCasa=Math.max(1,Math.min(4,qualidadeCasa));volumeSons=Math.max(0,Math.min(100,volumeSons));
         velocidadeSugador=Math.max(1,Math.min(6,velocidadeSugador));
         velocidadeConstrucao=Math.max(2,Math.min(16,velocidadeConstrucao));
         if(!java.util.Set.of("CATALOGO","OLLAMA","OPENAI").contains(provedor==null?"":provedor))provedor="CATALOGO";

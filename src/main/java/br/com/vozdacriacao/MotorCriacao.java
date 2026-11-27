@@ -17,14 +17,14 @@ public final class MotorCriacao {
         return !w.isOutOfHeightLimit(pos)&&w.isChunkLoaded(pos.getX()>>4,pos.getZ()>>4)&&w.canPlayerModifyAt(p,pos)&&w.getBlockState(pos).isAir()&&!p.getBoundingBox().intersects(new Box(pos))&&w.getOtherEntities(null,new Box(pos)).isEmpty();
     }
     public static final class Obra {
-        final ServerWorld mundo;private final List<Voxel> voxels;private final int custo;private int i,colocados,tempo;
-        Obra(ServerWorld w,List<Voxel> v,int c){mundo=w;voxels=v;custo=c;}
+        final ServerWorld mundo;private final List<Voxel> voxels;private final int custo;private final boolean residencia;private int i,colocados,tempo;
+        Obra(ServerWorld w,List<Voxel> v,int c,boolean r){mundo=w;voxels=v;custo=c;residencia=r;}
         boolean tick(ServerPlayerEntity p){
             tempo++;
             for(int n=0;n<ConfigLaCraft.obter().velocidadeConstrucao&&i<voxels.size();n++){
                 Voxel v=voxels.get(i++);
                 if(!livre(mundo,p,v.pos()))return true;
-                if(mundo.setBlockState(v.pos(),v.estado(),Block.NOTIFY_ALL)){
+                if(mundo.setBlockState(v.pos(),v.estado(),residencia?Block.NOTIFY_LISTENERS:Block.NOTIFY_ALL)){
                     colocados++;
                     if(n==0&&tempo%4==1)VozDaCriacao.som(mundo,v.pos(),2);
                     mundo.spawnParticles(ParticleTypes.END_ROD,v.pos().getX()+.5,v.pos().getY()+.5,v.pos().getZ()+.5,2,.3,.3,.3,.02);
@@ -48,7 +48,8 @@ public final class MotorCriacao {
                 ItemStack item=new ItemStack(it);item.setCustomName(Text.literal("Armadura esmeralda"));item.addEnchantment(Enchantments.PROTECTION,4);if(!p.getInventory().insertStack(item))p.dropItem(item,false);
             }return new Resultado(true,null);
         }
-        BlockPos origem=p.getBlockPos().offset(p.getHorizontalFacing(),9);
+        boolean residencia=pedido.tipo()==Pedido.Tipo.RESIDENCIA||pedido.tipo()==Pedido.Tipo.CASA;
+        BlockPos origem=p.getBlockPos().offset(p.getHorizontalFacing(),residencia?13:9);
         if(pedido.tipo()==Pedido.Tipo.BURROS){
             int n=0;
             for(int x=-2;x<=2;x++)for(int z=-1;z<=1;z++){
@@ -65,11 +66,9 @@ public final class MotorCriacao {
                     put(mapa,origem,c.x(),c.y(),c.z(),b);
                 }
             }
-            case CASA -> {
-                for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++)for(int y=0;y<=5;y++){
-                    boolean borda=Math.abs(x)==3||Math.abs(z)==3;
-                    if(y==5||(borda&&y<5&&!(z==-3&&x==0&&y<=1)))put(mapa,origem,x,y,z,y==5?Blocks.SPRUCE_PLANKS:((y==2&&Math.abs(x)==3&&z==0)?Blocks.GLASS:Blocks.OAK_PLANKS));
-                }
+            case CASA,RESIDENCIA -> {
+                var plano=pedido.tipo()==Pedido.Tipo.CASA?Residencia.planejar("Casa mobiliada",false,"rustico",2):pedido;
+                for(Pedido.Celula c:plano.celulas())mapa.put(origem.add(c.x(),c.y(),c.z()),estadoResidencia(c.bloco()));
             }
             case CASTELO,TORRE -> {
                 int r=pedido.tipo()==Pedido.Tipo.CASTELO?5:3,h=pedido.tipo()==Pedido.Tipo.CASTELO?6:9;
@@ -93,8 +92,21 @@ public final class MotorCriacao {
             default -> {return new Resultado(false,null);}
         }
         var v=mapa.entrySet().stream().map(e->new Voxel(e.getKey(),e.getValue())).sorted(Comparator.comparingInt(a->a.pos().getY())).toList();
-        if(v.isEmpty()||v.size()>1500||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
-        return new Resultado(true,new Obra(w,v,pedido.custo()));
+        if(v.isEmpty()||v.size()> (residencia?3500:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
+        return new Resultado(true,new Obra(w,v,pedido.custo(),residencia));
+    }
+    private static BlockState estadoResidencia(String b){
+        return switch(b){
+            case "porta_baixo"->Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING,Direction.NORTH).with(DoorBlock.HALF,net.minecraft.block.enums.DoubleBlockHalf.LOWER);
+            case "porta_cima"->Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING,Direction.NORTH).with(DoorBlock.HALF,net.minecraft.block.enums.DoubleBlockHalf.UPPER);
+            case "cama_pe"->Blocks.RED_BED.getDefaultState().with(BedBlock.FACING,Direction.NORTH).with(BedBlock.PART,net.minecraft.block.enums.BedPart.FOOT);
+            case "cama_cabeca"->Blocks.RED_BED.getDefaultState().with(BedBlock.FACING,Direction.NORTH).with(BedBlock.PART,net.minecraft.block.enums.BedPart.HEAD);
+            case "bau"->Blocks.CHEST.getDefaultState().with(ChestBlock.FACING,Direction.NORTH);
+            case "fornalha"->Blocks.FURNACE.getDefaultState().with(FurnaceBlock.FACING,Direction.SOUTH);
+            case "telhado_leste"->Blocks.SPRUCE_STAIRS.getDefaultState().with(StairsBlock.FACING,Direction.EAST);
+            case "telhado_oeste"->Blocks.SPRUCE_STAIRS.getDefaultState().with(StairsBlock.FACING,Direction.WEST);
+            default->net.minecraft.registry.Registries.BLOCK.get(new net.minecraft.util.Identifier("minecraft",b)).getDefaultState();
+        };
     }
     private static void put(Map<BlockPos,BlockState> m,BlockPos o,int x,int y,int z,Block b){m.put(o.add(x,y,z),b.getDefaultState());}
     private static void cubo(Map<BlockPos,BlockState> m,BlockPos o,int x1,int y1,int z1,int x2,int y2,int z2,Block b){for(int x=x1;x<=x2;x++)for(int y=y1;y<=y2;y++)for(int z=z1;z<=z2;z++)put(m,o,x,y,z,b);}
