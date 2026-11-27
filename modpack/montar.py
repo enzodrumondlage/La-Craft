@@ -51,15 +51,32 @@ def select(project,version=None):
             select(target,vid)
     finally: visiting.remove(pid)
 for slug in CFG["projetos"]: select(slug)
-# Revalidação após resolução; não publicar se houver conflito.
-for p,v in chosen.values():
-    for dep in v["dependencies"]:
-        vid=dep.get("version_id")
-        target=dep.get("project_id") or (get("version/"+vid)["project_id"] if vid else None)
-        if dep["dependency_type"]=="required":
-            if target not in chosen or (vid and chosen[target][1]["id"]!=vid): raise ValueError("Dependência não satisfeita: "+p["slug"])
-        if dep["dependency_type"]=="incompatible" and target in chosen and (not vid or chosen[target][1]["id"]==vid):
-            raise ValueError("Conflito declarado: "+p["slug"]+" / "+target)
+def validar():
+    # Revalidação após resolução; não publicar se houver conflito.
+    for p,v in chosen.values():
+        for dep in v["dependencies"]:
+            vid=dep.get("version_id")
+            target=dep.get("project_id") or (get("version/"+vid)["project_id"] if vid else None)
+            if dep["dependency_type"]=="required":
+                if target not in chosen or (vid and chosen[target][1]["id"]!=vid): raise ValueError("Dependência não satisfeita: "+p["slug"])
+            if dep["dependency_type"]=="incompatible" and target in chosen and (not vid or chosen[target][1]["id"]==vid):
+                raise ValueError("Conflito declarado: "+p["slug"]+" / "+target)
+
+validar()
+expansao=[]
+for slug in CFG.get('expansao',[]):
+    saved=chosen.copy(); pins=exact.copy()
+    try:
+        select(slug)
+        validar()
+        for p,v in chosen.values():
+            if not any(x['filename'].endswith('.jar') for x in v['files']): raise ValueError('JAR ausente: '+p['slug'])
+        expansao.append({'slug':slug,'status':'incluido'})
+    except Exception as e:
+        chosen.clear(); chosen.update(saved); exact.clear(); exact.update(pins); visiting.clear()
+        expansao.append({'slug':slug,'status':'omitido','motivo':str(e)})
+        print('OMITIDO:',slug,str(e))
+validar()
 files=[]; lock=[]; paths=set()
 for p,v in sorted(chosen.values(),key=lambda a:a[0]["slug"]):
     jars=[x for x in v["files"] if x["filename"].endswith(".jar")]
@@ -76,13 +93,14 @@ for p,v in sorted(chosen.values(),key=lambda a:a[0]["slug"]):
 jar=pathlib.Path(sys.argv[1])
 assert jar.is_file()
 out=pathlib.Path("dist");out.mkdir(exist_ok=True)
-index={"formatVersion":1,"game":"minecraft","versionId":"0.8.0-test","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
-mrpack=out/"La-Craft-Infinite-0.8.0-TESTE.mrpack"
+index={"formatVersion":1,"game":"minecraft","versionId":"0.8.0-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
+mrpack=out/"La-Craft-Infinite-0.8.0-EXPANDIDO.mrpack"
 with zipfile.ZipFile(mrpack,"w",zipfile.ZIP_DEFLATED) as z:
     z.writestr("modrinth.index.json",json.dumps(index,ensure_ascii=False,indent=2))
     z.write(jar,"overrides/mods/"+jar.name)
-with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.0-TESTE.zip","w",zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.0-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
     z.write(mrpack,mrpack.name)
+    z.writestr("expansao.json",json.dumps(expansao,ensure_ascii=False,indent=2))
     z.writestr("mods-lock.json",json.dumps(lock,ensure_ascii=False,indent=2))
     z.writestr("LEIA-ME.txt","Importe o arquivo .mrpack no Prism Launcher ou Modrinth App. O launcher baixa os mods de suas fontes oficiais. Não extraia este ZIP diretamente em mods: ele contém um manifesto, não todos os JARs. Pacote experimental, não é 1.0.0. Use Java 17 e teste em um mundo novo. Não foi validado em jogo.")
 print("Manifesto gerado:",len(files),"mods e dependências.")
