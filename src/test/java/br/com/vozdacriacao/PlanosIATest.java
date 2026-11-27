@@ -35,7 +35,7 @@ public final class PlanosIATest {
         if(!AcoesTexto.interpretar("teremoto").alvo().equals("tremor"))throw new AssertionError("Correção de terremoto");
         if(!AcoesTexto.interpretar("buraco negro").alvo().equals("gravidade"))throw new AssertionError("Gravidade");
         if(AcoesTexto.interpretar("nao quero terremoto")!=null)throw new AssertionError("Negação");
-        Pedido casa=IAConstrucoes.validar("{\\\"nome\\\":\\\"Casa IA\\\",\\\"tipo\\\":\\\"arquitetura\\\",\\\"caixas\\\":["+caixa("white_concrete",10,2,3,false)+","+caixa("air",1,1,1,false)+"]}");
+        Pedido casa=IAConstrucoes.validar("{\"nome\":\"Casa IA\",\"tipo\":\"arquitetura\",\"caixas\":["+caixa("white_concrete",10,2,3,false)+","+caixa("air",1,1,1,false)+"]}");
         if(casa.tipo()!=Pedido.Tipo.RESIDENCIA||casa.celulas().stream().anyMatch(c->c.bloco().equals("air")))throw new AssertionError("Arquitetura");
         System.out.println("Planos IA: testes aprovados");
     }
