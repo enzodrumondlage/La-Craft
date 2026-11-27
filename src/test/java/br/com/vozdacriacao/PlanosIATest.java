@@ -24,6 +24,10 @@ public final class PlanosIATest {
         eq(IAConstrucoes.validar("{\"nome\":\"Voo\",\"tipo\":\"voo\"}").custo(),120);
         eq(IAConstrucoes.validar("{\"nome\":\"Mob\",\"tipo\":\"mob\",\"id\":\"minecraft:piglin\",\"quantidade\":2,\"escala\":3}").custo(),180);
         rejeitar("{\"nome\":\"Mob\",\"tipo\":\"mob\",\"id\":\"minecraft:piglin\",\"quantidade\":99,\"escala\":3}");
+        Pedido a=IAConstrucoes.validar("{\"nome\":\"Cristal\",\"tipo\":\"artefato\",\"cor\":\"#22ff88\",\"efeitos\":[\"cura\",\"respirar\"],\"duracao\":30,\"recarga\":5}");
+        eq(a.custo(),140);eq(ArtefatoSpec.ler(a.alvo()).efeitos().size(),2);
+        if(ArtefatoSpec.offline("cristal verde de cura e velocidade")==null)throw new AssertionError();
+        rejeitar("{\"nome\":\"Cristal\",\"tipo\":\"artefato\",\"cor\":\"#22ff88\",\"efeitos\":[\"comando\"],\"duracao\":30,\"recarga\":5}");
         System.out.println("Planos IA: testes aprovados");
     }
 }

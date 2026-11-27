@@ -1,5 +1,5 @@
 # La Craft — Voz da Criação
-Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.6.0.
+Minecraft Java 1.20.1, Fabric, Java 17. Versão experimental 0.7.0.
 ## Instalação
 Baixe o JAR em Actions > execução bem-sucedida > Artifacts. Instale Fabric API 0.92.2+1.20.1 e Simple Voice Chat 2.5.26. Instale os três JARs no cliente e servidor.
 ## Uso
@@ -30,3 +30,6 @@ Sons espaciais do Minecraft ao absorver matéria (orbe), iniciar construção (f
 
 ## Desejos expandidos
 Chat: escreva `quero voar`, `casa`, `quero um piglin gigante`, `quero uma espada mágica`, `quero um laser`, `quero velocidade` ou `quero item minecraft:diamond`. IDs de mods instalados podem ser usados com `quero item mod:item` ou `quero invocar mod:mob`, se existirem nos registros; não há garantia de compatibilidade de cada mod. A opção Chat permite interpretar todas as mensagens (desligada por padrão). O voo dura cinco minutos em sobrevivência; o cetro gera um feixe visual de luz com botão direito. Gigantes têm escala visual experimental, colisão normal. A IA opcional agora interpreta itens, mobs, poderes e estruturas; não cria classes Java inéditas. Transcrição OpenAI opcional na página Chat: envia a gravação à API somente quando também autorizado o envio à nuvem e uma chave está configurada; pode cobrar e requer autorização do responsável/titular. Vosk continua padrão offline.
+
+## Motor de artefatos — primeira etapa
+Artefatos registrados com NBT persistente, cor de renderização e até cinco efeitos combináveis (cura, respirar, velocidade, salto, invisibilidade, resistência, levitação breve, brilho, nuvem, música). Experimente: `quero um cristal verde de cura e velocidade`. Clique direito para usar. Não são ainda modelos/texturas inéditos. Confirmação de voz editável ativa por padrão, desligável em Chat. Com LLM configurado, todos os pedidos passam pela IA; falhas não materializam um desejo diferente automaticamente. Sem LLM, o catálogo e o compositor limitado continuam disponíveis.

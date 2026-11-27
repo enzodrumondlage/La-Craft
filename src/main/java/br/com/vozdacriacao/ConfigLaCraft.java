@@ -18,6 +18,7 @@ public final class ConfigLaCraft {
     public boolean chatDesejos=true;
     public boolean chatTodos=false;
     public boolean vozNuvem=false;
+    public boolean confirmarVoz=true;
     public boolean voz=true;
     public boolean sugar=true;
     public int velocidadeSugador=3;

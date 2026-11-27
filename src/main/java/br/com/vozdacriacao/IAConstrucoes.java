@@ -21,7 +21,7 @@ public final class IAConstrucoes {
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
         Para itens existentes use {"nome":"nome","tipo":"item","id":"minecraft:diamond","quantidade":8}.
         Para mobs existentes use {"nome":"nome","tipo":"mob","id":"minecraft:piglin","quantidade":1,"escala":3}; escala de 1 a 4, quantidade 1 a 8.
-        Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
+        Para um item mágico combinável use {"nome":"Cristal do oceano","tipo":"artefato","cor":"#33AAFF","efeitos":["respirar","cura","brilho"],"duracao":30,"recarga":5}. Efeitos válidos: cura, respirar, velocidade, salto, invisivel, resistencia, levitacao, brilho, nuvem, musica. Combine até 5 efeitos. Duração em segundos 5 a 120, recarga 2 a 30. Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -72,6 +72,7 @@ public final class IAConstrucoes {
         nome=nome.substring(0,Math.min(48,nome.length()));
         if(plano.has("tipo")){
             String tipo=plano.get("tipo").getAsString();
+            if(tipo.equals("artefato"))return ArtefatoSpec.validar(nome,plano);
             if(tipo.equals("item")||tipo.equals("mob")){
                 Pedido.Tipo t=tipo.equals("item")?Pedido.Tipo.ITEM:Pedido.Tipo.MOB;
                 return Pedido.dinamico(nome,t,plano.get("id").getAsString(),num(plano,"quantidade",1,t==Pedido.Tipo.MOB?8:64),t==Pedido.Tipo.MOB?num(plano,"escala",1,4):1);

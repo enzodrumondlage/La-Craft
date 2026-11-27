@@ -59,6 +59,7 @@ public final class VozDaCriacao implements ModInitializer {
                 s.ultimoPedido=t;pedir(server,p,texto);
             });
         });
+        ArtefatoLaCraft.registrar();
         PoderesLaCraft.registrar();
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
@@ -77,9 +78,9 @@ public final class VozDaCriacao implements ModInitializer {
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null)return 0;
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
         Pedido pedido;
-        try{pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
+        try{pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         final Pedido alternativa=pedido;
-        boolean usarIA=pedido==null||pedido.alvo().isBlank()&&texto.trim().contains(" ")||switch(pedido.tipo()){case CASA,TORRE,FOGUETE,CASTELO,CAPIVARA,VOXEL->true;default->false;};
+        boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
             if(s.gerando){p.sendMessage(Text.literal("§eJá existe uma criação sendo planejada."),true);return 0;}
             var futuro=IAConstrucoes.planejar(texto);
@@ -89,9 +90,9 @@ public final class VozDaCriacao implements ModInitializer {
                 if(sessoes.get(p.getUuid())!=s||s.geracao!=geracao)return;
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
-                    s.pedido=erro==null?plano:alternativa;
+                    s.pedido=erro==null?plano:null;
                     if(s.pedido==null)p.sendMessage(Text.literal("§eA IA não retornou uma construção válida. Tente outro pedido."),false);
-                    else if(erro!=null)p.sendMessage(Text.literal("§eIA indisponível; usando modelo procedural."),false);
+
                 }
                 hud(server,p);
             }));

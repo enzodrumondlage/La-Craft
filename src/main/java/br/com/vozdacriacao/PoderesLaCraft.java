@@ -21,9 +21,9 @@ public final class PoderesLaCraft {
     static final String VOO="lacraft_voo",GIGANTE="La Craft Gigante ";
     private static final Map<UUID,Integer> voando=new HashMap<>();
     private static final Set<String> PROIBIDOS=Set.of("command_block","chain_command_block","repeating_command_block","command_block_minecart","structure_block","structure_void","jigsaw","barrier","debug_stick","light","knowledge_book");
-    static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB->true;default->false;};}
+    static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO->true;default->false;};}
     static void registrar(){
-        ServerPlayConnectionEvents.JOIN.register((h,s,server)->{if(h.player.getScoreboardTags().contains(VOO))revogar(h.player);});
+        ServerPlayConnectionEvents.JOIN.register((h,s,server)->{if(h.player.getCommandTags().contains(VOO))revogar(h.player);});
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->revogar(h.player));
         ServerTickEvents.END_SERVER_TICK.register(server->{
             for(var p:server.getPlayerManager().getPlayerList()){
@@ -49,7 +49,7 @@ public final class PoderesLaCraft {
     }
     private static void revogar(ServerPlayerEntity p){
         voando.remove(p.getUuid());
-        if(!p.getScoreboardTags().contains(VOO))return;
+        if(!p.getCommandTags().contains(VOO))return;
         p.removeScoreboardTag(VOO);
         if(!p.isCreative()&&!p.isSpectator()){
             p.getAbilities().allowFlying=false;p.getAbilities().flying=false;p.sendAbilitiesUpdate();
@@ -60,10 +60,11 @@ public final class PoderesLaCraft {
     static boolean executar(ServerPlayerEntity p,Pedido pedido){
         ServerWorld w=p.getServerWorld();
         switch(pedido.tipo()){
+            case ARTEFATO -> {return ArtefatoLaCraft.entregar(p,pedido);}
             case VOO -> {
                 if(!p.isCreative()&&!p.isSpectator()){
-                    if(p.getAbilities().allowFlying&&!p.getScoreboardTags().contains(VOO))return true;
-                    p.addScoreboardTag(VOO);voando.put(p.getUuid(),p.getServer().getTicks()+6000);
+                    if(p.getAbilities().allowFlying&&!p.getCommandTags().contains(VOO))return true;
+                    p.addCommandTag(VOO);voando.put(p.getUuid(),p.getServer().getTicks()+6000);
                     p.getAbilities().allowFlying=true;p.sendAbilitiesUpdate();
                 }
                 p.sendMessage(Text.literal("§bVoo liberado por 5 minutos. Aperte Espaço duas vezes."),false);return true;

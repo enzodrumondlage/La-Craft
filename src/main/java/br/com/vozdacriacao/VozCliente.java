@@ -27,6 +27,9 @@ public final class VozCliente implements ClientModInitializer {
     private static final List<Fragmento> fragmentos=new ArrayList<>();
     private record Fragmento(Vec3d origem,int estado,int jogador,int inicio){}
     @Override public void onInitializeClient(){
+        net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register((stack,tint)->{
+            var a=ArtefatoLaCraft.spec(stack);return a==null?0xffffff:a.cor();
+        },ArtefatoLaCraft.ITEM);
         voz=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vozdacriacao.voz",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_F,"category.vozdacriacao"));
         sugar=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vozdacriacao.sugar",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_G,"category.vozdacriacao"));
         ClientTickEvents.END_CLIENT_TICK.register(VozCliente::tick);
@@ -87,6 +90,7 @@ public final class VozCliente implements ClientModInitializer {
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
                     String texto=frase.substring(0,Math.min(frase.length(),240));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);
+                    if(ConfigLaCraft.obter().confirmarVoz){mc.setScreen(new ConfirmarVoz(texto));return;}
                     var b=PacketByteBufs.create();b.writeString(texto,240);ClientPlayNetworking.send(VozDaCriacao.PEDIR,b);
                 }));
             }
