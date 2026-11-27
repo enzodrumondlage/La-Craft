@@ -45,3 +45,6 @@ Ações de horário e clima autorizadas, chuva de itens/mobs com orçamento e ca
 
 ### 0.8.3 — Whisper local opcional
 O menu Chat permite ativar Whisper local. Requer um whisper-server do projeto whisper.cpp instalado separadamente, com modelo multilíngue, idioma pt e escuta somente em 127.0.0.1:8080. Documentação oficial: https://github.com/ggml-org/whisper.cpp/tree/master/examples/server . O mod envia WAV PCM mono 16 kHz ao endpoint local /inference e, se indisponível, usa Vosk com aviso. Não instala o servidor nem o modelo automaticamente; não foi validado com gravações reais. A captura permanece via Simple Voice Chat.
+
+### 0.8.4 experimental — voz
+Reparo conservador de texto UTF-8 lido como Windows-1252/Latin-1, microfone direto Java Sound (padrão do Windows, opção na página Chat), indicação de preparação, 250 ms de captura após soltar F e fallback Simple Voice Chat. Sem gravação em disco. Não garante reconhecimento perfeito; testar com microfone real.

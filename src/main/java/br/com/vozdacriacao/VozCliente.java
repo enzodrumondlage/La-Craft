@@ -22,7 +22,8 @@ public final class VozCliente implements ClientModInitializer {
     private static KeyBinding voz,sugar;
     private static boolean gravando,sugando,bloqueio,processando;
     private static long geracao;
-    private static int ticks,inicio,materia,custo;
+    private static int ticks,inicio,materia,custo,fimGravacao=-1;
+    private static MicrofoneDireto microfone;
     private static String pedido="Nenhum";
     private static final List<Fragmento> fragmentos=new ArrayList<>();
     private record Fragmento(Vec3d origem,int estado,int jogador,int inicio){}
@@ -66,7 +67,7 @@ public final class VozCliente implements ClientModInitializer {
             String n=custo>0?"Pedido: "+pedido:(!pedido.equals("Nenhum")?pedido:"G: sugar | F: voz | /lacraft");
             ctx.drawTextWithShadow(mc.textRenderer,n,x+7,y+40,0xFFFFFF);
             if(processando)ctx.drawTextWithShadow(mc.textRenderer,"Reconhecendo voz...",x,y+62,0x9BD8FF);
-            if(gravando){ctx.drawTextWithShadow(mc.textRenderer,"● GRAVANDO LOCALMENTE",x,y+62,(ticks/5)%2==0?0xFF5555:0xFFAAAA);ctx.fill(x,y+74,x+100,y+78,0xFF414855);ctx.fill(x,y+74,x+(int)(100*Math.min(1,BufferVoz.nivel()*8)),y+78,0xFF4DE29C);}
+            if(gravando){ctx.drawTextWithShadow(mc.textRenderer,microfone!=null&&!microfone.pronto()&&!microfone.falhou()?"Preparando microfone...":fimGravacao>=0?"Finalizando áudio...":"● GRAVANDO LOCALMENTE",x,y+62,(ticks/5)%2==0?0xFF5555:0xFFAAAA);ctx.fill(x,y+74,x+100,y+78,0xFF414855);ctx.fill(x,y+74,x+(int)(100*Math.min(1,(microfone!=null&&microfone.pronto()?microfone.nivel():BufferVoz.nivel())*8)),y+78,0xFF4DE29C);}
         });
     }
     private static void tick(MinecraftClient mc){
@@ -74,11 +75,18 @@ public final class VozCliente implements ClientModInitializer {
         if(mc.player==null||mc.world==null){limpar();return;}
         boolean habilitado=mc.currentScreen==null&&mc.isWindowFocused();
         boolean f=ConfigLaCraft.obter().voz&&habilitado&&pressionada(mc,voz);
-        if(!habilitado){BufferVoz.cancelar();gravando=false;bloqueio=true;}
+        if(!habilitado){cancelarCaptura();gravando=false;bloqueio=true;}
         if(habilitado&&!f)bloqueio=false;
-        if(f&&!gravando&&!bloqueio&&!processando&&ClientPlayNetworking.canSend(VozDaCriacao.PEDIR)){BufferVoz.iniciar();gravando=true;inicio=ticks;}
-        if(gravando&&(!f||ticks-inicio>=600)){
-            short[] pcm=BufferVoz.finalizar();gravando=false;bloqueio=f;
+        if(f&&!gravando&&!bloqueio&&!processando&&ClientPlayNetworking.canSend(VozDaCriacao.PEDIR)){BufferVoz.iniciar();microfone=ConfigLaCraft.obter().microfoneDireto?MicrofoneDireto.iniciar():null;gravando=true;inicio=ticks;fimGravacao=-1;}
+        if(gravando&&!f&&fimGravacao<0)fimGravacao=ticks+5;
+        if(gravando&&(ticks-inicio>=600||(fimGravacao>=0&&ticks>=fimGravacao))){
+            short[] pcm=BufferVoz.finalizar();
+            if(microfone!=null){
+                short[] direto=microfone.finalizar();microfone=null;
+                if(direto.length>=12000&&AudioLimpo.preparar(direto)){Arrays.fill(pcm,(short)0);pcm=direto;}
+                else {Arrays.fill(direto,(short)0);mc.player.sendMessage(Text.literal("§eMicrofone direto sem áudio suficiente; usando Simple Voice Chat."),false);}
+            }
+            gravando=false;bloqueio=f;fimGravacao=-1;
             if(!AudioLimpo.preparar(pcm)){Arrays.fill(pcm,(short)0);mc.player.sendMessage(Text.literal("§eÁudio muito baixo ou silencioso. Configure o microfone e a ativação do Simple Voice Chat."),true);}
             else {
                 processando=true;long g=++geracao;
@@ -90,7 +98,7 @@ public final class VozCliente implements ClientModInitializer {
                     if(mc.player==null||!ClientPlayNetworking.canSend(VozDaCriacao.PEDIR))return;
                     if(erro!=null){org.slf4j.LoggerFactory.getLogger("LaCraft").warn("Falha no reconhecimento de voz",erro);mc.player.sendMessage(Text.literal("§eFalha na transcrição. Confira a configuração e latest.log."),false);return;}
                     if(resultado.fallback())mc.player.sendMessage(Text.literal("§eWhisper local indisponível; usando Vosk."),false);
-                    String frase=resultado.texto();
+                    String frase=TextoVoz.corrigir(resultado.texto());
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
                     String texto=frase.substring(0,Math.min(frase.length(),240));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);
@@ -117,5 +125,6 @@ public final class VozCliente implements ClientModInitializer {
         if(t.getCategory()==InputUtil.Type.MOUSE)return GLFW.glfwGetMouseButton(h,t.getCode())==GLFW.GLFW_PRESS;
         return b.isPressed();
     }
-    private static void limpar(){geracao++;processando=false;BufferVoz.cancelar();gravando=false;sugando=false;bloqueio=false;materia=0;custo=0;pedido="Nenhum";fragmentos.clear();}
+    private static void cancelarCaptura(){BufferVoz.cancelar();if(microfone!=null){microfone.cancelar();microfone=null;}fimGravacao=-1;}
+    private static void limpar(){geracao++;processando=false;cancelarCaptura();gravando=false;sugando=false;bloqueio=false;materia=0;custo=0;pedido="Nenhum";fragmentos.clear();}
 }

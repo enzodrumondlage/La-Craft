@@ -38,7 +38,7 @@ public final class ReconhecedorVoz {
             }finally{Arrays.fill(pcm,(short)0);}
         },WORK);
     }
-    private static String extrair(String json){return JsonParser.parseString(json).getAsJsonObject().get("text").getAsString().trim();}
+    private static String extrair(String json){return TextoVoz.corrigir(JsonParser.parseString(json).getAsJsonObject().get("text").getAsString()).trim();}
     private static Path preparar() throws IOException{
         Path base=FabricLoader.getInstance().getGameDir().resolve("config/lacraft/voz").toAbsolutePath().normalize();
         try(InputStream in=ReconhecedorVoz.class.getResourceAsStream("/vozdacriacao/modelo-pt.zip")){

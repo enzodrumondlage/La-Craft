@@ -8,6 +8,11 @@ import com.google.gson.JsonParser;
 
 public final class ReconhecimentoTest {
     public static void main(String[] args)throws Exception{
+        for(String palavra:List.of("mansão","são","coração","voçê","dragão","é","Ã","dia")){
+            if(!TextoVoz.corrigir(palavra).equals(palavra))throw new AssertionError("Texto correto alterado: "+palavra);
+            String ruim=new String(palavra.getBytes(java.nio.charset.StandardCharsets.UTF_8),java.nio.charset.Charset.forName("windows-1252"));
+            if(!ruim.contains("\uFFFD")&&!TextoVoz.corrigir(ruim).equals(palavra))throw new AssertionError("Codificação não reparada: "+ruim);
+        }
         Path temp=Files.createTempDirectory("lacraft-teste-voz");
         try{
             Path p;
