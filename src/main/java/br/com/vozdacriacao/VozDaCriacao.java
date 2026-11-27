@@ -24,7 +24,7 @@ public final class VozDaCriacao implements ModInitializer {
     public static final Identifier SUGAR=id("sugar"),HUD=id("hud"),EFEITO=id("efeito"),PEDIR=id("pedir"),SOM=id("som");
     private static final Map<UUID,Sessao> sessoes=new HashMap<>();
     private static final Set<Block> PERMITIDOS=Set.of(Blocks.DIRT,Blocks.GRASS_BLOCK,Blocks.COARSE_DIRT,Blocks.STONE,Blocks.COBBLESTONE,Blocks.SAND,Blocks.RED_SAND,Blocks.GRAVEL,Blocks.ANDESITE,Blocks.DIORITE,Blocks.GRANITE,Blocks.DEEPSLATE,Blocks.NETHERRACK,Blocks.END_STONE);
-    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;MotorCriacao.Obra obra;}
+    private static final class Sessao {int ate,ultimo=-100,ultimoPedido=-100;boolean ativo,gerando;long geracao;Pedido pedido;final Deque<Pedido> fila=new ArrayDeque<>();MotorCriacao.Obra obra;}
     private static Identifier id(String n){return new Identifier("vozdacriacao",n);}
     private static Sessao sessao(ServerPlayerEntity p){return sessoes.computeIfAbsent(p.getUuid(),k->new Sessao());}
     @Override public void onInitialize(){
@@ -61,6 +61,7 @@ public final class VozDaCriacao implements ModInitializer {
         });
         ArtefatoLaCraft.registrar();
         PoderesLaCraft.registrar();
+        AcoesMundo.registrar();
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());
@@ -70,18 +71,19 @@ public final class VozDaCriacao implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((d,a,e)->{
             d.register(literal("lacraft").then(argument("pedido",StringArgumentType.greedyString()).executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),StringArgumentType.getString(c,"pedido")))));
             d.register(literal("vozteste").executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),"fonte")));
-            d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
+            d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.fila.clear();AcoesMundo.cancelar(p);s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
         });
     }
     private static int pedir(MinecraftServer server,ServerPlayerEntity p,String texto){
         Sessao s=sessao(p);
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null){p.sendMessage(Text.literal("§eNão é possível criar agora: construção em andamento ou sem permissão."),true);return 0;}
         if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
+        if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
         Pedido pedido;
-        try{pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
+        try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){p.sendMessage(Text.literal("§ePedido inválido."),true);return 0;}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
         Pedido recurso=CatalogoMods.alternativa(texto);if(recurso!=null)pedido=recurso;
-        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA&&!IAConstrucoes.ativo()){s.pedido=pedido;hud(server,p);return 1;}
+        if(pedido!=null&&pedido.tipo()==Pedido.Tipo.RESIDENCIA){s.pedido=pedido;hud(server,p);return 1;}
         final Pedido alternativa=pedido;
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
@@ -112,9 +114,9 @@ public final class VozDaCriacao implements ModInitializer {
             Sessao s=sessao(p);
             if(s.obra!=null){
                 if(!p.isAlive()||p.getServerWorld()!=s.obra.mundo||p.isSpectator()||!p.getAbilities().allowModifyWorld){
-                    MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
+                    MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;s.fila.clear();
                 }else if(s.obra.tick(p)){
-                    boolean completa=s.obra.completa();
+                    boolean completa=s.obra.completa();if(!completa)s.fila.clear();
                     MateriaState.obter(server).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;
                     som(p.getServerWorld(),p.getBlockPos(),completa?3:4);
                     p.sendMessage(Text.literal(completa?"§aDesejo realizado!":"§eConstrução interrompida por obstáculos."),true);
@@ -124,6 +126,8 @@ public final class VozDaCriacao implements ModInitializer {
             if(ConfigLaCraft.obter().sugar&&s.ativo&&t<=s.ate&&!p.isSpectator()&&p.getAbilities().allowModifyWorld)sugar(server,p);
             if(s.ativo&&t>s.ate)s.ativo=false;
             var m=MateriaState.obter(server);
+            if(s.pedido==null&&s.obra==null&&!s.fila.isEmpty())s.pedido=s.fila.removeFirst();
+            if(s.pedido!=null&&s.pedido.tipo()==Pedido.Tipo.SEQUENCIA){s.fila.addAll(s.pedido.acoes());s.pedido=s.fila.removeFirst();}
             if(s.pedido!=null&&s.obra==null&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&(!ConfigLaCraft.obter().coletarMateria||m.saldo(p.getUuid())>=s.pedido.custo())){
                 var pedido=s.pedido;s.pedido=null;
                 if(!ConfigLaCraft.obter().coletarMateria)pedido=pedido.gratuito();
@@ -132,7 +136,7 @@ public final class VozDaCriacao implements ModInitializer {
                     m.alterar(p.getUuid(),-pedido.custo());s.obra=resultado.obra();
                     som(p.getServerWorld(),p.getBlockPos(),s.obra==null?3:1);
                     p.sendMessage(Text.literal("§aMaterializando: "+pedido.nome()),false);
-                }else p.sendMessage(Text.literal("§ePedido indisponível ou espaço insuficiente. Nada foi cobrado."),false);
+                }else {s.fila.clear();p.sendMessage(Text.literal("§eAção indisponível ou espaço insuficiente. Etapas restantes canceladas; esta ação não foi cobrada."),false);}
                 hud(server,p);
             }
             if(t%20==0||s.ativo)hud(server,p);

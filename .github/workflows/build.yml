@@ -17,7 +17,7 @@ jobs:
       - name: Testar lógica Java
         run: |
           mkdir -p /tmp/lacraft-test
-          javac --release 17 -d /tmp/lacraft-test src/main/java/br/com/vozdacriacao/{BufferVoz,Pedido}.java tests/BufferVozTest.java
+          javac --release 17 -d /tmp/lacraft-test src/main/java/br/com/vozdacriacao/{BufferVoz,Pedido,AcoesTexto}.java tests/BufferVozTest.java
           java -cp /tmp/lacraft-test BufferVozTest
       - name: Embutir modelo de reconhecimento PT
         run: |
@@ -28,13 +28,13 @@ jobs:
         run: gradle build --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: la-craft-0.8.1
-          path: build/libs/la-craft-0.8.1.jar
+          name: la-craft-0.8.2
+          path: build/libs/la-craft-0.8.2.jar
           if-no-files-found: error
       - name: Resolver modpack e dependências
-        run: python3 modpack/montar.py build/libs/la-craft-0.8.1.jar
+        run: python3 modpack/montar.py build/libs/la-craft-0.8.2.jar
       - uses: actions/upload-artifact@v4
         with:
-          name: La-Craft-Infinite-0.8.1-EXPANDIDO
-          path: dist/La-Craft-Infinite-0.8.1-EXPANDIDO.zip
+          name: La-Craft-Infinite-0.8.2-EXPANDIDO
+          path: dist/La-Craft-Infinite-0.8.2-EXPANDIDO.zip
           if-no-files-found: error

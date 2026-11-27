@@ -9,7 +9,7 @@ def get(path):
     if path not in CACHE:
         for attempt in range(3):
             try:
-                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.8.1 (GitHub modpack builder)"})
+                req=urllib.request.Request(API+path,headers={"User-Agent":"LaCraftInfinite/0.8.2 (GitHub modpack builder)"})
                 with urllib.request.urlopen(req,timeout=45) as r: CACHE[path]=json.load(r)
                 break
             except (OSError,ValueError):
@@ -98,12 +98,12 @@ for p,v in sorted(chosen.values(),key=lambda a:a[0]["slug"]):
 jar=pathlib.Path(sys.argv[1])
 assert jar.is_file()
 out=pathlib.Path("dist");out.mkdir(exist_ok=True)
-index={"formatVersion":1,"game":"minecraft","versionId":"0.8.1-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
-mrpack=out/"La-Craft-Infinite-0.8.1-EXPANDIDO.mrpack"
+index={"formatVersion":1,"game":"minecraft","versionId":"0.8.2-expandido","name":"La Craft Infinite - TESTE","summary":"Pacote experimental; compatibilidade em jogo ainda não comprovada.","files":files,"dependencies":{"minecraft":MC,"fabric-loader":CFG["loader"]}}
+mrpack=out/"La-Craft-Infinite-0.8.2-EXPANDIDO.mrpack"
 with zipfile.ZipFile(mrpack,"w",zipfile.ZIP_DEFLATED) as z:
     z.writestr("modrinth.index.json",json.dumps(index,ensure_ascii=False,indent=2))
     z.write(jar,"overrides/mods/"+jar.name)
-with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.1-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
+with zipfile.ZipFile(out/"La-Craft-Infinite-0.8.2-EXPANDIDO.zip","w",zipfile.ZIP_DEFLATED) as z:
     z.write(mrpack,mrpack.name)
     z.writestr("expansao.json",json.dumps(expansao,ensure_ascii=False,indent=2))
     z.writestr("mods-lock.json",json.dumps(lock,ensure_ascii=False,indent=2))

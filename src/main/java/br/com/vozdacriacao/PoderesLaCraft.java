@@ -21,6 +21,7 @@ public final class PoderesLaCraft {
     static final String VOO="lacraft_voo",GIGANTE="La Craft Gigante ";
     private static final Map<UUID,Integer> voando=new HashMap<>();
     private static final Set<String> PROIBIDOS=Set.of("command_block","chain_command_block","repeating_command_block","command_block_minecart","structure_block","structure_void","jigsaw","barrier","debug_stick","light","knowledge_book");
+    static boolean itemPermitido(Identifier id){return !PROIBIDOS.contains(id.getPath())&&Registries.ITEM.get(id)!=Items.AIR;}
     static boolean especial(Pedido.Tipo t){return switch(t){case VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO->true;default->false;};}
     static void registrar(){
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->{if(h.player.getCommandTags().contains(VOO))revogar(h.player);});
@@ -62,12 +63,13 @@ public final class PoderesLaCraft {
         switch(pedido.tipo()){
             case ARTEFATO -> {return ArtefatoLaCraft.entregar(p,pedido);}
             case VOO -> {
+                int segundos=pedido.alvo().equals("duracao")?Math.max(1,Math.min(600,pedido.quantidade())):300;
                 if(!p.isCreative()&&!p.isSpectator()){
                     if(p.getAbilities().allowFlying&&!p.getCommandTags().contains(VOO))return true;
-                    p.addCommandTag(VOO);voando.put(p.getUuid(),p.getServer().getTicks()+6000);
+                    p.addCommandTag(VOO);voando.put(p.getUuid(),p.getServer().getTicks()+segundos*20);
                     p.getAbilities().allowFlying=true;p.sendAbilitiesUpdate();
                 }
-                p.sendMessage(Text.literal("§bVoo liberado por 5 minutos. Aperte Espaço duas vezes."),false);return true;
+                p.sendMessage(Text.literal("§bVoo liberado por "+segundos+" segundos. Aperte Espaço duas vezes."),false);return true;
             }
             case VELOCIDADE -> {p.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED,6000,3));return true;}
             case SALTO -> {p.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST,6000,4));p.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOW_FALLING,6000,0));return true;}

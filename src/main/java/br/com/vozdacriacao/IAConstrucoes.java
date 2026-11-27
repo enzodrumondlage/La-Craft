@@ -19,10 +19,14 @@ public final class IAConstrucoes {
         Responda somente um objeto JSON: {"nome":"nome curto","caixas":[{"x1":-2,"y1":0,"z1":-2,"x2":2,"y2":4,"z2":2,"bloco":"stone_bricks","oco":true}]}.
         Use até 64 caixas, no máximo 1500 voxels únicos. Coordenadas inteiras x,z entre -6 e 6, y de 0 a 20, mínimos antes dos máximos.
         oco=true significa apenas a superfície da caixa; false significa volume preenchido.
-        Para casas e mansões mobiliadas use {"nome":"Casa moderna","tipo":"residencia","grande":false,"estilo":"moderno","qualidade":4}. Estilos rustico, moderno, medieval, luxuoso; qualidade 1 a 4. grande=true produz dois quartos. A planta inclui portas, camas, baús, iluminação, janelas, bancada e fornalha. Não use este tipo para piscinas, garagens, outros andares ou detalhes que não estejam disponíveis.
+        Para casas e mansões mobiliadas use {"nome":"Casa moderna","tipo":"residencia","grande":false,"estilo":"moderno","qualidade":4}. Estilos rustico, moderno, medieval, luxuoso; qualidade 1 a 4. grande=true produz dois quartos; opcional quartos de 1 a 4. A planta inclui portas, camas, baús, iluminação, janelas, bancada e fornalha. Não use este tipo para piscinas, garagens, outros andares ou detalhes que não estejam disponíveis.
         Para itens existentes use {"nome":"nome","tipo":"item","id":"minecraft:diamond","quantidade":8}.
         Para mobs existentes use {"nome":"nome","tipo":"mob","id":"minecraft:piglin","quantidade":1,"escala":3}; escala de 1 a 4, quantidade 1 a 8.
         Para um item mágico combinável use {"nome":"Cristal do oceano","tipo":"artefato","cor":"#33AAFF","efeitos":["respirar","cura","brilho"],"duracao":30,"recarga":5}. Efeitos válidos: cura, respirar, velocidade, salto, invisivel, resistencia, levitacao, brilho, nuvem, musica. Combine até 5 efeitos. Duração em segundos 5 a 120, recarga 2 a 30. Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
+        Para sequência use {"nome":"Plano","tipo":"sequencia","acoes":[{"nome":"Noite","tipo":"tempo","hora":13000},{"nome":"Chuva","tipo":"clima","clima":"chuva","duracao":60}]}; 1 a 8 ações, sem sequências aninhadas.
+        Tempo: hora 0 a 23999. Clima: limpo, chuva, tempestade; duração 1 a 3600 segundos. Voo: duracao 1 a 600 segundos (opcional).
+        Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
+        Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -81,7 +85,8 @@ public final class IAConstrucoes {
         if(e instanceof java.io.IOException)return "Não foi possível conectar à IA. Verifique o serviço.";
         return "A IA retornou um plano inválido mesmo após a revisão. Nenhuma matéria foi consumida.";
     }
-    static Pedido validar(String json){
+    static Pedido validar(String json){return validar(json,false);}
+    private static Pedido validar(String json,boolean filho){
         if(json.length()>32768)throw new IllegalArgumentException("JSON grande demais");
         JsonObject plano=JsonParser.parseString(json).getAsJsonObject();
         String nome=plano.get("nome").getAsString().replaceAll("[\\p{Cntrl}§]","").trim();
@@ -89,9 +94,24 @@ public final class IAConstrucoes {
         nome=nome.substring(0,Math.min(48,nome.length()));
         if(plano.has("tipo")){
             String tipo=plano.get("tipo").getAsString();
+            if(tipo.equals("sequencia")){
+                if(filho)throw new IllegalArgumentException("Sequência aninhada");
+                JsonArray a=plano.getAsJsonArray("acoes");if(a.size()<1||a.size()>8)throw new IllegalArgumentException("Quantidade de ações inválida");
+                List<Pedido> passos=new ArrayList<>();for(var e:a)passos.add(validar(e.toString(),true));return Pedido.sequencia(passos);
+            }
+            if(tipo.equals("tempo"))return Pedido.acao(nome,Pedido.Tipo.TEMPO,Integer.toString(num(plano,"hora",0,23999)),1,1);
+            if(tipo.equals("clima")){
+                String c=plano.get("clima").getAsString();if(!Set.of("limpo","chuva","tempestade").contains(c))throw new IllegalArgumentException("Clima inválido");
+                return Pedido.acao(nome,Pedido.Tipo.CLIMA,c,1,num(plano,"duracao",1,3600));
+            }
+            if(tipo.equals("chuva_mob")||tipo.equals("chuva_item")){
+                String id=plano.get("id").getAsString();if(!id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")||id.length()>120)throw new IllegalArgumentException("ID inválido");
+                return new Pedido(nome,50,tipo.equals("chuva_mob")?Pedido.Tipo.CHUVA_MOB:Pedido.Tipo.CHUVA_ITEM,List.of(),id,num(plano,"quantidade",1,32),num(plano,"duracao",1,30));
+            }
+            if(tipo.equals("voo"))return new Pedido(nome,120,Pedido.Tipo.VOO,List.of(),"duracao",plano.has("duracao")?num(plano,"duracao",1,600):300,1);
             if(tipo.equals("residencia")){
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");
-                return Residencia.planejar(nome,plano.get("grande").getAsBoolean(),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
+                return Residencia.planejar(nome,plano.has("quartos")?num(plano,"quartos",1,4):(plano.get("grande").getAsBoolean()?2:1),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
             }
             if(tipo.equals("artefato"))return ArtefatoSpec.validar(nome,plano);
             if(tipo.equals("item")||tipo.equals("mob")){

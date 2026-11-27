@@ -2,19 +2,22 @@ package br.com.vozdacriacao;
 import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.*;
-public record Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String alvo,int quantidade,int escala){
+public record Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String alvo,int quantidade,int escala,List<Pedido> acoes){
     public record Celula(int x,int y,int z,String bloco){}
     public Pedido(String nome,int custo,Tipo tipo){this(nome,custo,tipo,List.of(),"",1,1);}
     public Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas){this(nome,custo,tipo,celulas,"",1,1);}
-    public Pedido {celulas=List.copyOf(celulas);}
-    public Pedido gratuito(){return new Pedido(nome,0,tipo,celulas,alvo,quantidade,escala);}
-    public enum Tipo { FONTE,CASA,TORRE,FOGUETE,CASTELO,BURROS,CAPIVARA,ARCO,ARMADURA,VOXEL,VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO,RESIDENCIA }
+    public Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String alvo,int quantidade,int escala){this(nome,custo,tipo,celulas,alvo,quantidade,escala,List.of());}
+    public Pedido {celulas=List.copyOf(celulas);acoes=List.copyOf(acoes);}
+    static Pedido acao(String nome,Tipo tipo,String alvo,int qtd,int duracao){return new Pedido(nome,0,tipo,List.of(),alvo,qtd,duracao);}
+    static Pedido sequencia(List<Pedido> acoes){if(acoes.isEmpty()||acoes.size()>8||acoes.stream().anyMatch(a->a.tipo()==Tipo.SEQUENCIA))throw new IllegalArgumentException("Sequência inválida");return new Pedido("Plano combinado",0,Tipo.SEQUENCIA,List.of(),"",1,1,acoes);}
+    public Pedido gratuito(){return new Pedido(nome,0,tipo,celulas,alvo,quantidade,escala,acoes);}
+    public enum Tipo { FONTE,CASA,TORRE,FOGUETE,CASTELO,BURROS,CAPIVARA,ARCO,ARMADURA,VOXEL,VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO,RESIDENCIA,TEMPO,CLIMA,CHUVA_ITEM,CHUVA_MOB,SEQUENCIA }
     static String normal(String s){return Normalizer.normalize(s.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","").trim();}
     static boolean palavra(String s,String p){return Pattern.compile("(?<![a-z0-9_])(?:"+p+")(?![a-z0-9_])").matcher(s).find();}
     public static boolean pedidoChat(String s){
         String t=normal(s);
         if(t.startsWith("lacraft: ")||t.matches("^(quero|desejo|crie|criar|construa|construir|invoque|invocar|me de|me da|me transforme|faca|gere|casa|mansao|castelo|torre|estatua|cristal|amuleto|cetro|varinha)\\b.*"))return true;
-        try{return interpretar(s)!=null&&t.split("\\s+").length<=4;}
+        try{return (AcoesTexto.interpretar(s)!=null||interpretar(s)!=null)&&t.split("\\s+").length<=4;}
         catch(IllegalArgumentException ex){return false;}
     }
     public static Pedido dinamico(String nome,Tipo tipo,String alvo,int qtd,int escala){

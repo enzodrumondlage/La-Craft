@@ -8,14 +8,19 @@ final class Residencia {
         String t=Pedido.normal(frase).replaceFirst("^lacraft:\\s*","");
         if(!t.matches("^(?:(?:quero|desejo|crie|criar|construa|construir|faca|gere|me de)\\s+)?(?:(?:uma|um|minha)\\s+)?(?:casa|mansao)\\b.*"))return null;
         boolean grande=Pedido.palavra(t,"mansao|grande|dois quartos|2 quartos");
+        int quartos=Pedido.palavra(t,"quatro quartos|4 quartos")?4:Pedido.palavra(t,"tres quartos|3 quartos")?3:Pedido.palavra(t,"um quarto|1 quarto")?1:grande?2:1;
         // Não descartar requisitos extras não implementados.
-        if(Pedido.palavra(t,"piscina|garagem|andar|andares|tres quartos|3 quartos|quatro quartos|4 quartos|voadora|submarina"))return null;
+        if(Pedido.palavra(t,"piscina|garagem|andar|andares|voadora|submarina"))return null;
         String estilo=Pedido.palavra(t,"moderna|moderno")?"moderno":Pedido.palavra(t,"medieval")?"medieval":Pedido.palavra(t,"luxuosa|luxuoso|luxo")?"luxuoso":"rustico";
-        return planejar(grande?"Mansão mobiliada":"Casa mobiliada",grande,estilo,qualidade);
+        return planejar(grande?"Mansão mobiliada":"Casa mobiliada",quartos,estilo,qualidade);
     }
     static Pedido planejar(String nome,boolean grande,String estilo,int qualidade){
-        if(!ESTILOS.contains(estilo)||qualidade<1||qualidade>4)throw new IllegalArgumentException("Estilo ou qualidade inválidos");
-        int w=grande?7:4,d=grande?6:5;
+        return planejar(nome,grande?2:1,estilo,qualidade);
+    }
+    static Pedido planejar(String nome,int quartos,String estilo,int qualidade){
+        boolean grande=quartos>1;
+        if(quartos<1||quartos>4||!ESTILOS.contains(estilo)||qualidade<1||qualidade>4)throw new IllegalArgumentException("Estilo ou qualidade inválidos");
+        int w=quartos>2?10:grande?7:4,d=quartos>2?9:grande?6:5;
         Map<Pos,String> m=new LinkedHashMap<>();
         String parede=switch(estilo){case "moderno"->"white_concrete";case "medieval"->"stone_bricks";case "luxuoso"->"quartz_block";default->"oak_planks";};
         String pilar=estilo.equals("rustico")?"spruce_log":"stone_bricks";
@@ -40,7 +45,11 @@ final class Residencia {
         }
         put(m,-w+1,1,-d+1,"crafting_table");put(m,-w+2,1,-d+1,"fornalha");put(m,w-1,1,-d+1,"bau");
         put(m,-w+1,1,-d+2,"lantern");put(m,w-1,1,-d+2,"lantern");
-        if(grande){
+        if(quartos>2){
+            for(int x:new int[]{-2,2})for(int z=-5;z<d;z++)for(int y=1;y<=4;y++){if((z==-3||z==4)&&y<=2)continue;put(m,x,y,z,parede);}
+            for(int x=-w+1;x<w;x++)if(Math.abs(x)>=2)for(int y=1;y<=4;y++){put(m,x,y,-6,parede);put(m,x,y,0,parede);}
+            int n=0;for(int z:new int[]{-3,5})for(int x:new int[]{-6,6})if(n++<quartos){cama(m,x,z);put(m,x+1,1,z,"bau");put(m,x-1,1,z,"lantern");}
+        }else if(grande){
             for(int x=-w+1;x<w;x++)for(int y=1;y<=4;y++){
                 if((x==-3||x==3)&&y<=2)continue;
                 put(m,x,y,1,parede);

@@ -8,6 +8,8 @@ public final class ResidenciaTest {
         check(count(a,"cama_pe")==1&&count(a,"cama_cabeca")==1);check(count(a,"bau")>=1&&count(a,"crafting_table")==1&&count(a,"fornalha")==1&&count(a,"glass")>0);
         var m=Residencia.interpretar("mansão com dois quartos",4);check(m!=null&&count(m,"cama_pe")==2&&m.celulas().size()<3500);
         check(Residencia.interpretar("mansão com piscina",4)==null);
+        var quatro=Residencia.interpretar("mansão com quatro quartos",4);check(quatro!=null&&count(quatro,"cama_pe")==4&&quatro.celulas().size()<3500);
+        check(AcoesTexto.interpretar("madrugada").alvo().equals("22000"));check(AcoesTexto.interpretar("tirar chuva").alvo().equals("limpo"));check(AcoesTexto.interpretar("voar por 15 segundos").quantidade()==15);check(AcoesTexto.interpretar("chuva de esqueletos").alvo().equals("minecraft:skeleton"));
         check(Pedido.pedidoChat("mansão com dois quartos e camas"));
         check(!Pedido.pedidoChat("oi tudo bem"));
         check(!AudioLimpo.preparar(new short[4800]));short[] onda=new short[4800];for(int i=0;i<onda.length;i++)onda[i]=(short)(200*Math.sin(i*.2));check(AudioLimpo.preparar(onda));

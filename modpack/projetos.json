@@ -16,7 +16,8 @@
     "ferrite-core",
     "mutant-monsters",
     "structure-pool-api",
-    "porting_lib"
+    "porting_lib",
+    "indium"
   ],
   "expansao": [
     "bosses-of-mass-destruction",
@@ -58,8 +59,21 @@
     "dynamic-fps",
     "memoryleakfix",
     "sound-physics-remastered",
-    "notenoughanimations",
-    "effective"
+    "effective",
+    "not-enough-animations",
+    "mythicmetals",
+    "better-combat",
+    "soulslike-weaponry",
+    "immersive-armors",
+    "hex-casting",
+    "fabric-seasons",
+    "visuality",
+    "origins",
+    "botania",
+    "macaws-furniture",
+    "another-furniture",
+    "creeper-overhaul",
+    "enderman-overhaul"
   ],
   "pins": {
     "fabric-api": "UapVHwiP",

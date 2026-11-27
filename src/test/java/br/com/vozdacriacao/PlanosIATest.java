@@ -28,6 +28,10 @@ public final class PlanosIATest {
         eq(a.custo(),140);eq(ArtefatoSpec.ler(a.alvo()).efeitos().size(),2);
         if(ArtefatoSpec.offline("cristal verde de cura e velocidade")==null)throw new AssertionError();
         rejeitar("{\"nome\":\"Cristal\",\"tipo\":\"artefato\",\"cor\":\"#22ff88\",\"efeitos\":[\"comando\"],\"duracao\":30,\"recarga\":5}");
+        var seq=IAConstrucoes.validar("{\"nome\":\"Plano\",\"tipo\":\"sequencia\",\"acoes\":[{\"nome\":\"Noite\",\"tipo\":\"tempo\",\"hora\":13000},{\"nome\":\"Voo\",\"tipo\":\"voo\",\"duracao\":15}]}");
+        eq(seq.acoes().size(),2);eq(seq.acoes().get(1).quantidade(),15);
+        rejeitar("{\"nome\":\"Erro\",\"tipo\":\"tempo\",\"hora\":24000}");
+        rejeitar("{\"nome\":\"Erro\",\"tipo\":\"clima\",\"clima\":\"qualquer\",\"duracao\":10}");
         System.out.println("Planos IA: testes aprovados");
     }
 }
