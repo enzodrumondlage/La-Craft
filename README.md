@@ -79,3 +79,6 @@ O planejador pode definir até 16 cuboides, cores independentes, mapa de pixels 
 
 ### 0.9.8 experimental — catálogo e eventos combináveis
 Índice de recursos registrados com traduções pt_br/en_us dos mods e busca por nome exato e termos. Não é um índice de embeddings; não infere poderes de terceiros. Chuva mista declarativa com até 8 grupos/32 aparições alternadas, e fila espera evento ativo. Verificação de marcadores de quartos, banheiros, porta dupla, vidro preto e escadas; não prova a planta inteira nem acessibilidade. Ollama segue externo. Motor de veículos e criaturas universais, texturas avançadas e efeitos de terreno ainda pendentes. Sem teste em cliente.
+
+### 0.9.9 experimental
+O planejador pode solicitar até duas pesquisas adicionais no índice imutável de recursos registrados, por termos escolhidos pela IA. Resultados são validados por categoria. Limite de desejo por voz/comando ampliado para 768 caracteres; chat vanilla continua limitado pelo Minecraft. Validação de pares de camas e portas; tentativa de uso de blocos decorativos simples dos mods de móveis com validação de registro e restrições. Contexto Ollama de 6144 tokens pode aumentar consumo de RAM. Não é versão 1.0.0; falta teste visual, modelos vivos e veículos inéditos funcionais, arquitetura completa e IA embutida. 

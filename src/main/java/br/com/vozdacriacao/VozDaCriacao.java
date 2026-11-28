@@ -34,9 +34,9 @@ public final class VozDaCriacao implements ModInitializer {
             server.execute(()->{Sessao s=sessao(p);int t=server.getTicks();if(ativo&&t-s.ultimo<2)return;s.ultimo=t;s.ativo=ativo;s.ate=t+12;});
         });
         ServerPlayNetworking.registerGlobalReceiver(PEDIR,(server,p,handler,buf,sender)->{
-            if(buf.readableBytes()>970)return;
+            if(buf.readableBytes()>3080)return;
             final String texto;
-            try{texto=buf.readString(240);}catch(RuntimeException ex){return;}
+            try{texto=buf.readString(768);}catch(RuntimeException ex){return;}
             if(buf.isReadable())return;
             server.execute(()->{
                 Sessao s=sessao(p);int t=server.getTicks();
@@ -49,7 +49,7 @@ public final class VozDaCriacao implements ModInitializer {
         net.fabricmc.fabric.api.message.v1.ServerMessageEvents.CHAT_MESSAGE.register((msg,p,params)->{
             if(!ConfigLaCraft.obter().chatDesejos||!ServerPlayNetworking.canSend(p,HUD))return;
             String texto=msg.getSignedContent();
-            if(texto.length()>240||(!ConfigLaCraft.obter().chatTodos&&!Pedido.pedidoChat(texto)))return;
+            if(texto.length()>768||(!ConfigLaCraft.obter().chatTodos&&!Pedido.pedidoChat(texto)))return;
             var server=p.getServer();
             if(server==null)return;
             server.execute(()->{
@@ -85,7 +85,7 @@ public final class VozDaCriacao implements ModInitializer {
     private static int pedir(MinecraftServer server,ServerPlayerEntity p,String texto){
         Sessao s=sessao(p);
         if(p.isSpectator()||!p.getAbilities().allowModifyWorld||s.obra!=null){p.sendMessage(Text.literal("§eNão é possível criar agora: construção em andamento ou sem permissão."),true);return 0;}
-        if(texto.length()>240||texto.codePoints().anyMatch(Character::isISOControl))return 0;
+        if(texto.length()>768||texto.codePoints().anyMatch(Character::isISOControl))return 0;
         String corrigido=AcoesTexto.corrigir(texto);
         if(!corrigido.equals(Pedido.normal(texto))){p.sendMessage(Text.literal("§bInterpretei: "+corrigido),false);}
         if(Set.of("desfaca","desfazer","desfaca a ultima criacao","desfaca meu ultimo desejo","desfaca a ultima construcao").contains(Pedido.normal(texto))){
@@ -93,11 +93,12 @@ public final class VozDaCriacao implements ModInitializer {
             s.ultimaObra=null;p.sendMessage(Text.literal("§aÚltima construção removida."),false);return 1;
         }
         if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
+        if(Pedido.palavra(corrigido,"nao quero|nao crie|nao faca|nao invoque")&&corrigido.matches("^(?:lacraft: )?nao (?:quero|crie|faca|invoque).*")){p.sendMessage(Text.literal("§ePedido negado; nada criado."),false);return 0;}
         Pedido existente=IndiceRecursos.exato(texto);
         if(existente!=null){s.pedido=existente;p.sendMessage(Text.literal("§bRecurso encontrado: "+existente.alvo()),false);hud(server,p);return 1;}
         Pedido equipamento=CatalogoMods.equipamentoSimples(texto);
         if(equipamento!=null){s.pedido=equipamento;p.sendMessage(Text.literal("§bEquipamento encontrado em mod: "+equipamento.alvo()),false);hud(server,p);return 1;}
-        if(CatalogoMods.pedeCajadoSimples(texto)){p.sendMessage(Text.literal("§eNenhum cajado ou varinha correspondente encontrado nos mods instalados. Use /lacraftbuscar cajado."),false);return 0;}
+        if(!IAConstrucoes.ativo()&&CatalogoMods.pedeCajadoSimples(texto)){p.sendMessage(Text.literal("§eNenhum cajado ou varinha correspondente encontrado nos mods instalados. Use /lacraftbuscar cajado."),false);return 0;}
         Pedido pedido;
         try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){if(IAConstrucoes.ativo())pedido=null;else{p.sendMessage(Text.literal("§ePedido não suportado pelo modo offline: "+ex.getMessage()),true);return 0;}}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;
@@ -108,7 +109,7 @@ public final class VozDaCriacao implements ModInitializer {
         boolean usarIA=true;
         if(usarIA&&IAConstrucoes.ativo()){
             if(s.gerando){p.sendMessage(Text.literal("§eJá existe uma criação sendo planejada."),true);return 0;}
-            var futuro=IAConstrucoes.planejar(corrigido,CatalogoMods.contexto(corrigido));
+            var futuro=IAConstrucoes.planejar(corrigido,CatalogoMods.contexto(corrigido),IndiceRecursos.obter());
             if(futuro==null){p.sendMessage(Text.literal("§eIA ocupada. Tente novamente."),true);return 0;}
             s.pedido=null;s.gerando=true;long geracao=++s.geracao;hud(server,p);
             futuro.whenComplete((plano,erro)->server.execute(()->{

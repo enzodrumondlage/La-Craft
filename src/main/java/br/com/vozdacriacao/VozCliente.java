@@ -103,10 +103,10 @@ public final class VozCliente implements ClientModInitializer {
                     if(resultado.fallback())mc.player.sendMessage(Text.literal("§eWhisper local indisponível; usando Vosk."),false);
                     String frase=TextoVoz.corrigir(resultado.texto());
                     if(frase.isBlank()){mc.player.sendMessage(Text.literal("§eNão entendi. Fale novamente."),true);return;}
-                    String texto=frase.substring(0,Math.min(frase.length(),240));
+                    String texto=frase.substring(0,Math.min(frase.length(),768));
                     mc.player.sendMessage(Text.literal("§bEntendi: "+texto),false);
                     if(ConfigLaCraft.obter().confirmarVoz){if(mc.currentScreen==null)mc.setScreen(new ConfirmarVoz(texto));else mc.player.sendMessage(Text.literal("§eFrase não enviada: feche o menu e repita ou escreva no chat."),false);return;}
-                    var b=PacketByteBufs.create();b.writeString(texto,240);ClientPlayNetworking.send(VozDaCriacao.PEDIR,b);
+                    var b=PacketByteBufs.create();b.writeString(texto,768);ClientPlayNetworking.send(VozDaCriacao.PEDIR,b);
                 }));
             }
         }

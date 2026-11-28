@@ -11,6 +11,14 @@ final class RequisitosCasa {
     static void verificar(String t,Pedido p){
         int quartos=qtd(t,"quartos?"),banheiros=qtd(t,"banheiros?");
         var cs=p.celulas();
+        Set<Pedido.Celula> conjunto=new HashSet<>(cs);
+        for(var c:cs){
+            String par=switch(c.bloco()){case "porta_baixo"->"porta_cima";case "porta_cima"->"porta_baixo";case "cama_pe"->"cama_cabeca";case "cama_cabeca"->"cama_pe";default->null;};
+            if(par==null)continue;
+            int dy=c.bloco().equals("porta_baixo")?1:c.bloco().equals("porta_cima")?-1:0;
+            int dz=c.bloco().equals("cama_pe")?-1:c.bloco().equals("cama_cabeca")?1:0;
+            if(!conjunto.contains(new Pedido.Celula(c.x(),c.y()+dy,c.z()+dz,par)))throw new IllegalArgumentException("Peça incompleta ou orientação inválida: "+c.bloco());
+        }
         if(quartos>=0&&cs.stream().filter(c->c.bloco().equals("cama_pe")).count()!=quartos)throw new IllegalArgumentException("Quantidade de camas não corresponde aos "+quartos+" quartos solicitados");
         if(banheiros>=0&&cs.stream().filter(c->c.bloco().equals("cauldron")).count()!=banheiros)throw new IllegalArgumentException("Quantidade de marcadores de banheiro não corresponde a "+banheiros);
         if(Pedido.palavra(t,"porta dupla")){

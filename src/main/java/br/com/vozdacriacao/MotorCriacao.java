@@ -85,7 +85,11 @@ public final class MotorCriacao {
             }
             case CASA,RESIDENCIA -> {
                 var plano=pedido.tipo()==Pedido.Tipo.CASA?Residencia.planejar("Casa mobiliada",false,"rustico",2):pedido;
-                for(Pedido.Celula c:plano.celulas())mapa.put(origem.add(c.x(),c.y(),c.z()),estadoResidencia(c.bloco()));
+                for(Pedido.Celula c:plano.celulas()){
+                    BlockState estado=estadoResidencia(c.bloco());
+                    if(estado==null||estado.isAir())return new Resultado(false,null);
+                    mapa.put(origem.add(c.x(),c.y(),c.z()),estado);
+                }
             }
             case CASTELO,TORRE -> {
                 int r=pedido.tipo()==Pedido.Tipo.CASTELO?5:3,h=pedido.tipo()==Pedido.Tipo.CASTELO?6:9;
@@ -113,6 +117,16 @@ public final class MotorCriacao {
         return new Resultado(true,new Obra(w,v,pedido.custo(),residencia));
     }
     private static BlockState estadoResidencia(String b){
+        if(b.contains(":")){
+            var id=net.minecraft.util.Identifier.tryParse(b);if(id==null||!net.minecraft.registry.Registries.BLOCK.containsId(id))return null;
+            // Somente recursos decorativos comuns, não máquinas ou blocos especiais.
+            var bloco=net.minecraft.registry.Registries.BLOCK.get(id);
+            if(!Set.of("handcrafted","mcwfurnitures","supplementaries").contains(id.getNamespace()))return null;
+            if(id.getPath().matches(".*(?:bomb|cannon|dispenser|spawner|generator|command|explos|trap).*"))return null;
+            var estado=bloco.getDefaultState();
+            if(estado.hasBlockEntity()||estado.isAir())return null;
+            return estado;
+        }
         return switch(b){
             case "porta_baixo"->Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING,Direction.NORTH).with(DoorBlock.HALF,net.minecraft.block.enums.DoubleBlockHalf.LOWER);
             case "porta_cima"->Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING,Direction.NORTH).with(DoorBlock.HALF,net.minecraft.block.enums.DoubleBlockHalf.UPPER);

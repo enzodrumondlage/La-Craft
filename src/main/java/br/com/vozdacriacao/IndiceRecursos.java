@@ -48,15 +48,25 @@ final class IndiceRecursos {
         l.add(new Entrada(tipo,id,nome,normal(nome+" "+en.getOrDefault(key,"")+" "+id+" "+classe)));
     }
     static List<Entrada> buscar(String tipo,Set<String> termos,int limite){
+        return buscar(obter(),tipo,termos,limite);
+    }
+    static List<Entrada> buscar(List<Entrada> fonte,String tipo,Set<String> termos,int limite){
+        Set<String> normalizados=new LinkedHashSet<>();for(String t:termos){String n=normal(t);if(!n.isBlank())normalizados.add(n);}
         record Ponto(Entrada e,int valor){}
-        return obter().stream().filter(e->e.tipo().equals(tipo))
-            .map(e->new Ponto(e,termos.stream().mapToInt(t->{
-                String n=normal(t);if(n.isBlank())return 0;
+        return fonte.stream().filter(e->e.tipo().equals(tipo))
+            .map(e->new Ponto(e,normalizados.stream().mapToInt(n->{
                 if(normal(e.nome()).equals(n)||normal(e.id().getPath()).equals(n))return 8;
                 return (" "+e.texto()+" ").contains(" "+n+" ")?3:e.texto().contains(n)&&n.length()>3?1:0;
             }).sum())).filter(p->p.valor()>0)
             .sorted(Comparator.comparingInt(Ponto::valor).reversed().thenComparing(p->p.e().id().toString()))
             .limit(limite).map(Ponto::e).toList();
+    }
+    static String consultar(List<Entrada> fonte,ConsultaIA.Consulta c){
+        var encontrados=buscar(fonte,c.categoria(),new LinkedHashSet<>(c.termos()),24);
+        String titulo=switch(c.categoria()){case "mob"->"Entidades";case "bloco"->"Blocos";default->"Itens";};
+        StringBuilder b=new StringBuilder(titulo+": ");
+        for(var e:encontrados)b.append(e.id()).append(" [").append(e.nome().replace('[','(').replace(']',')')).append("], ");
+        return b.toString();
     }
     static Pedido exato(String texto){
         String t=normal(texto).replaceFirst("^(quero|me de|me da|invoque|crie) ","").replaceFirst("^(um|uma) ","");

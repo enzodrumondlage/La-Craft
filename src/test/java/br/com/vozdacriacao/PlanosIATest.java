@@ -50,6 +50,9 @@ public final class PlanosIATest {
         if(!gotas.get(0).mob()||gotas.get(1).mob()||!gotas.get(2).id().equals("minecraft:pig"))throw new AssertionError("Chuva mista");
         IAConstrucoes.validarIntencao("chuva de porco e maca","Itens: minecraft:apple\nEntidades: minecraft:pig",chuva);
         try{RequisitosCasa.verificar("4 quartos e 4 banheiros",casa);throw new AssertionError("Casa incompleta");}catch(IllegalArgumentException esperado){}
+        var consulta=ConsultaIA.ler(com.google.gson.JsonParser.parseString("{\"categoria\":\"item\",\"termos\":[\"lanterna\",\"lantern\"]}").getAsJsonObject());eq(consulta.termos().size(),2);
+        IAConstrucoes.validarIntencao("lanterna","Itens: minecraft:stick\nItens: minecraft:lantern",Pedido.dinamico("Lanterna",Pedido.Tipo.ITEM,"minecraft:lantern",1,1));
+        try{RequisitosCasa.verificar("casa",new Pedido("Porta incompleta",1,Pedido.Tipo.RESIDENCIA,java.util.List.of(new Pedido.Celula(0,1,0,"porta_baixo"))));throw new AssertionError("Porta incompleta");}catch(IllegalArgumentException esperado){}
         System.out.println("Planos IA: testes aprovados");
     }
 }
