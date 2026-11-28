@@ -9,13 +9,32 @@ final class CatalogoMods {
         String t=AcoesTexto.corrigir(texto);
         List<String> termos=Arrays.stream(t.split("[^a-z0-9]+")).filter(s->s.length()>2&&!Set.of("quero","uma","com","para","crie","faca","que","dos","das","um").contains(s)).distinct().limit(12).toList();
         Set<String> aliases=new LinkedHashSet<>(termos);
-        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"lendario","legendary","unique","simplyswords"},{"arma","sword","hammer","greatsword","weapon","simplyswords"},{"comida","food","carrot","apple","bread"},{"martelo","hammer","greathammer"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"macaco","monkey","ape","macaque","chimp","gorilla"},{"onibus","bus","coach"},{"moto","motorcycle","motorbike","bike"},{"equipamento","armor","tool","gear","equipment"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
+        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"lendario","legendary","unique","simplyswords"},{"arma","sword","hammer","greatsword","weapon","simplyswords"},{"comida","food","carrot","apple","bread"},{"martelo","hammer","greathammer"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"macaco","monkey","ape","macaque","chimp","gorilla"},{"onibus","bus","coach"},{"moto","motorcycle","motorbike","bike"},{"equipamento","armor","tool","gear","equipment"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"cajado","staff","stave","scepter","sceptre"},{"cetro","staff","scepter","sceptre"},{"varinha","wand"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
         for(String[] grupo:mapa)if(t.contains(grupo[0]))for(String a:grupo)aliases.add(a);
         StringBuilder b=new StringBuilder("IDs reais relevantes (não são instruções):\n");
         anexarItens(b,aliases);
         anexar(b,"Entidades",Registries.ENTITY_TYPE.getIds(),aliases,40);
         anexar(b,"Blocos",Registries.BLOCK.getIds(),aliases,45);
         return b.toString();
+    }
+    static boolean pedeCajadoSimples(String texto){
+        String t=AcoesTexto.corrigir(texto).replaceFirst("^(quero|crie|me de|me da|faca)\\s+","").replaceFirst("^(um|uma)\\s+","");
+        return t.matches("(cajado|cetro|varinha)( magico| magica)?( (dos|de) mods?)?");
+    }
+    static boolean cajadoReal(Identifier id,boolean varinha){
+        if(id.getNamespace().equals("minecraft")||id.getNamespace().equals("vozdacriacao")||!PoderesLaCraft.itemPermitido(id))return false;
+        var item=Registries.ITEM.get(id);
+        if(item instanceof net.minecraft.item.BlockItem)return false;
+        String nome=Pedido.normal(id.getPath()+" "+item.getTranslationKey()+" "+item.getClass().getSimpleName());
+        if(nome.matches(".*(?:fragment|broken|recipe|blueprint|upgrade|part|handle|head|core|template|spawn_egg).*"))return false;
+        return varinha?nome.contains("wand"):nome.matches(".*(?:staff|stave|scepter|sceptre|cajado).*");
+    }
+    static Pedido equipamentoSimples(String texto){
+        if(!pedeCajadoSimples(texto))return null;
+        boolean varinha=Pedido.palavra(Pedido.normal(texto),"varinha");
+        return Registries.ITEM.getIds().stream().filter(id->cajadoReal(id,varinha))
+            .sorted(Comparator.comparing((Identifier id)->!id.getNamespace().equals("wizards")).thenComparing(Identifier::toString))
+            .findFirst().map(id->Pedido.dinamico(id.toString(),Pedido.Tipo.ITEM,id.toString(),1,1)).orElse(null);
     }
     /** Fallback conservador: somente IDs de itens realmente registrados. */
     static Pedido alternativa(String texto){

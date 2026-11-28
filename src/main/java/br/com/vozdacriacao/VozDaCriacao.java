@@ -92,6 +92,9 @@ public final class VozDaCriacao implements ModInitializer {
             s.ultimaObra=null;p.sendMessage(Text.literal("§aÚltima construção removida."),false);return 1;
         }
         if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
+        Pedido equipamento=CatalogoMods.equipamentoSimples(texto);
+        if(equipamento!=null){s.pedido=equipamento;p.sendMessage(Text.literal("§bEquipamento encontrado em mod: "+equipamento.alvo()),false);hud(server,p);return 1;}
+        if(CatalogoMods.pedeCajadoSimples(texto)){p.sendMessage(Text.literal("§eNenhum cajado ou varinha correspondente encontrado nos mods instalados. Use /lacraftbuscar cajado."),false);return 0;}
         Pedido pedido;
         try{pedido=AcoesTexto.interpretar(texto);if(pedido!=null){s.pedido=pedido;hud(server,p);return 1;}pedido=Residencia.interpretar(texto,ConfigLaCraft.obter().qualidadeCasa);if(pedido==null)pedido=ArtefatoSpec.offline(texto);if(pedido==null)pedido=Pedido.interpretar(texto);}catch(IllegalArgumentException ex){if(IAConstrucoes.ativo())pedido=null;else{p.sendMessage(Text.literal("§ePedido não suportado pelo modo offline: "+ex.getMessage()),true);return 0;}}
         if(pedido!=null&&pedido.tipo()==Pedido.Tipo.CASA)pedido=null;

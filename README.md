@@ -71,3 +71,5 @@ Auditoria 0.9.4 detectou requisitos incompatíveis de Fabric Loader em BetterEnd
 
 ### 0.9.6 — modelos declarativos experimentais
 Planos originais de até 24 peças BlockDisplay com materiais e movimentos, incluindo animação decorativa persistente por tags. /lalimparmodelos remove peças próprias carregadas nas proximidades. Validação de intenção para macaco, ônibus e construções; consulta de IDs do catálogo; nova tentativa inclui motivo de rejeição; altura arquitetônica até 48, orçamento 16000 blocos. Não são mobs funcionais nem veículos dirigíveis, não há geração de texturas próprias. Ainda não testado dentro do cliente Minecraft.
+
+Correção adicional 0.9.6: pedidos simples de cajado/cetro/varinha consultam primeiro itens reais registrados de terceiros, priorizando Wizards e excluindo partes e blocos. Sem correspondência, informa a ausência em vez de fabricar artefato genérico. Pedidos complexos continuam no planejador; habilidades específicas ainda não verificadas automaticamente.
