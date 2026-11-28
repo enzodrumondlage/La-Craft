@@ -30,7 +30,7 @@ public final class IAConstrucoes {
         Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
         Para cajado, cetro e varinha, procure staff, stave, scepter, sceptre e wand nos itens reais do catálogo. Retorne tipo item com ID existente; não crie artefato genérico se houver equipamento apropriado. Se pedirem efeitos específicos não comprovados, não os invente. Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
-        Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos.
+        Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos. Para efeitos visuais avançados use modo="avancado" (detritos de blocos virtuais, onda volumétrica e vórtice animado; não destrói o terreno).
         Para criaturas originais terrestres e montarias terrestres originais use {"nome":"nome do ser","tipo":"ser","montavel":false,"anda":true,"visual":[...]}. Visual segue o esquema de 3 a 16 peças coloridas com texturas e animações de artefato. O ser tem caminhada simples e pode ser montado se montavel=true. Para veículo terrestre original use tipo ser com montavel=true, anda=false, modo="veiculo", velocidade=0.32, largura=1.8, altura=1.2, comprimento=2.8. Modo criatura ou veiculo, velocidade 0.12 a 0.45, largura 0.6 a 2.8, altura 0.6 a 3, comprimento 0.6 a 3.6. Comprimento afeta aparência, colisão usa a maior dimensão horizontal. Não possui voo, nado avançado, habilidades especiais ou suspensão física. Não prometa essas características. Prefira entidade real já instalada quando adequada.
         Para modelos decorativos originais e animados use {"nome":"nome do objeto pedido","tipo":"modelo","pecas":[{"x":0,"y":0,"z":0,"sx":2,"sy":3,"sz":1,"bloco":"brown_concrete","movimento":"fixo"}]}. Gere 3 a 24 peças com posições x/z -10 a 10, y 0 a 12, tamanhos sx/sy/sz 0.2 a 8. Movimentos fixo, balanco, giro, flutuar. Materiais: concretos branco, preto, cinza, cinza claro, marrom, laranja, amarelo, vermelho, azul, verde, rosa (IDs em inglês), brown_terracotta, terracotta, black_wool, white_wool, brown_wool, glass, iron_block, gold_block, oak_planks, sea_lantern, quartz_block. Cada peça representa um elemento da geometria. Se pedirem um macaco, desenhe cabeça, olhos, corpo, braços, pernas e cauda; nunca burro ou outro animal. Ônibus, moto e avião de construção são modelos decorativos, não mobs.
         Para arquitetura com ambientes conectados e até dois andares prefira tipo planta2: {"nome":"Projeto","tipo":"planta2","andares":1,"parede":"white_concrete","porta_dupla":true,"janelas_pretas":true,"entrada":"h","comodos":[{"id":"h","funcao":"hall","andar":0,"x1":0,"z1":0,"x2":8,"z2":10},{"id":"q","funcao":"quarto","andar":0,"x1":8,"z1":0,"x2":16,"z2":10}],"ligacoes":[["h","q"]]}. Escolha posições, dimensões e ligações conforme desejo, não copie exemplo. Cada ambiente tem limites inclusivos e compartilha uma parede inteira ou parcial com vizinhos (sem interiores sobrepostos); mínimo 6x6, x/z -24..24, até 20 ambientes. Tipos hall, quarto, banheiro, cozinha, sala, garagem, escritorio, biblioteca, salao, deposito, jardim, piscina, outro. Entrada no hall térreo com face norte livre. Dois andares: hall_superior aponta para hall do andar 1 com exatamente os mesmos limites do hall térreo, pelo menos 8x10; motor cria escada. Todo andar 1 apoiado no térreo. Banheiro privativo ligado somente ao quarto correspondente. Piscina adjacente ao jardim conectado, sem ligação por porta. Materiais de parede: white_concrete, quartz_block, stone_bricks, oak_planks, spruce_planks, black_concrete, bricks, sandstone. Use arquitetura voxel quando necessário para formas e alturas fora deste esquema.
@@ -43,7 +43,7 @@ public final class IAConstrucoes {
     private IAConstrucoes(){}
     public static boolean ativo(){
         var c=ConfigLaCraft.obter();
-        return c.provedor.equals("OLLAMA")&&!c.modelo.toLowerCase(Locale.ROOT).contains("cloud")||c.provedor.equals("OPENAI")&&c.permitirNuvem&&!ConfigLaCraft.chave(c).isBlank();
+        return c.provedor.equals("INTEGRADA")||c.provedor.equals("OLLAMA")&&!c.modelo.toLowerCase(Locale.ROOT).contains("cloud")||c.provedor.equals("OPENAI")&&c.permitirNuvem&&!ConfigLaCraft.chave(c).isBlank();
     }
     public static CompletableFuture<Pedido> planejar(String texto,String catalogo,List<IndiceRecursos.Entrada> indice){
         if(!ativo()||!OCUPADO.compareAndSet(false,true))return null;
@@ -58,6 +58,9 @@ public final class IAConstrucoes {
                 req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+contexto+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");
                 req.addProperty("prompt",pedidoTexto);req.addProperty("stream",false);req.addProperty("format","json");
                 JsonObject opts=new JsonObject();opts.addProperty("temperature",0.2);opts.addProperty("num_predict",3072);opts.addProperty("num_ctx",6144);req.add("options",opts);
+                String json;
+                if(cfg.provedor.equals("INTEGRADA"))json=IAIntegrada.gerar(req.get("system").getAsString(),pedidoTexto);
+                else {
                 boolean nuvem=cfg.provedor.equals("OPENAI");
                 HttpRequest.Builder builder;
                 if(nuvem){
@@ -76,7 +79,9 @@ public final class IAConstrucoes {
                     if(response.statusCode()!=200)throw new IllegalArgumentException("IA HTTP "+response.statusCode());
                     byte[] b=in.readNBytes(65537);if(b.length>65536)throw new IllegalArgumentException("Resposta muito grande");
                     JsonObject body=JsonParser.parseString(new String(b,StandardCharsets.UTF_8)).getAsJsonObject();
-                    String json=nuvem?body.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString():body.get("response").getAsString();
+                    json=nuvem?body.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString():body.get("response").getAsString();
+                }
+                }
                     try{
                         var obj=JsonParser.parseString(json).getAsJsonObject();
                         if(obj.has("tipo")&&obj.get("tipo").getAsString().equals("pesquisa")){
@@ -86,7 +91,6 @@ public final class IAConstrucoes {
                         }
                         Pedido p=validar(json);validarIntencao(texto,contexto,p);return p;
                     }catch(RuntimeException ex){motivo=ex.getMessage()==null?"campos inválidos":ex.getMessage();motivo=motivo.substring(0,Math.min(300,motivo.length()));if(++erros>=3)throw new IllegalArgumentException("Plano inválido após revisão: "+motivo);}
-                }
                 }
                 throw new IllegalArgumentException("Plano inválido");
             }catch(Exception e){throw new CompletionException(e);}
@@ -102,6 +106,7 @@ public final class IAConstrucoes {
         if(m.contains("HTTP 404"))return "Modelo não encontrado. Confira o modelo escolhido.";
         if(m.contains("HTTP 5"))return "Serviço de IA indisponível.";
         if(e instanceof java.net.http.HttpTimeoutException)return "A IA demorou demais para responder.";
+        if(m.startsWith("IA integrada:"))return m;
         if(e instanceof java.io.IOException)return "Não foi possível conectar à IA. Verifique o serviço.";
         if(m.startsWith("Plano inválido após revisão:"))return m.substring(0,Math.min(190,m.length()))+". Nenhuma matéria consumida.";
         return "A IA retornou um plano inválido mesmo após a revisão. Nenhuma matéria foi consumida.";
@@ -168,7 +173,7 @@ public final class IAConstrucoes {
             }
             if(tipo.equals("voo"))return new Pedido(nome,120,Pedido.Tipo.VOO,List.of(),"duracao",plano.has("duracao")?num(plano,"duracao",1,600):300,1);
             if(tipo.equals("carro"))return CarroSpec.pedido(plano.get("cor").getAsString());
-            if(tipo.equals("fenomeno")){String forma=plano.get("forma").getAsString();if(!Set.of("onda","redemoinho","tremor","gravidade","meteoros").contains(forma))throw new IllegalArgumentException("Fenômeno inválido");return new Pedido(nome,80,Pedido.Tipo.FENOMENO,List.of(),forma,1,num(plano,"duracao",1,30));}
+            if(tipo.equals("fenomeno")){String forma=plano.get("forma").getAsString();if(!Set.of("onda","redemoinho","tremor","gravidade","meteoros").contains(forma))throw new IllegalArgumentException("Fenômeno inválido");String modo=plano.has("modo")?plano.get("modo").getAsString():"normal";if(!Set.of("normal","avancado").contains(modo))throw new IllegalArgumentException("Modo inválido");return new Pedido(nome,80,Pedido.Tipo.FENOMENO,List.of(),forma,modo.equals("avancado")?2:1,num(plano,"duracao",1,30));}
             if(tipo.equals("planta2"))return ProjetoComodos.planejar(nome,plano);
             if(tipo.equals("planta"))return PlantaFlexivel.planejar(new PlantaFlexivel.Spec(num(plano,"quartos",0,8),num(plano,"banheiros",0,8),bool(plano,"cozinha"),bool(plano,"sala"),bool(plano,"garagem"),bool(plano,"piscina"),bool(plano,"jardim"),plano.get("estilo").getAsString()));
             if(tipo.equals("residencia")){

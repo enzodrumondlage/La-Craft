@@ -91,3 +91,6 @@ Novo formato planta2: a IA escolhe retângulos de ambientes, funções e ligaç�
 
 ### 0.9.12 experimental
 Início automático do serviço Ollama já instalado na pasta oficial padrão do Windows, apenas loopback; sem instalação ou download automático de modelos. Entidades/veículos terrestres com dimensões, velocidade e geometria declarativas persistentes, textura de 8x8 ou 16x16 e animação de roda. Colisão horizontal quadrada conservadora, sem suspensão ou voo; não equivale a veículo completo. Novo GameTest de persistência e dimensões. Ainda exige teste gráfico e instalação real. Não é 1.0.0.
+
+### 0.9.13 experimental
+Integração JNI java-llama.cpp 4.2.0 com Qwen2.5 1.5B Instruct Q4_K_M (Apache-2.0, download inicial 1,12 GB, SHA-256 fixo, CPU), modo INTEGRADA para instalações novas. Usuários antigos podem selecionar INTEGRADA no menu. Nenhum Ollama ou API obrigatório nesse modo. Ainda falta testar inferência real no Windows. Fenômenos avançados com detritos temporários e onda/vórtice de BlockDisplay, sem alteração permanente de terreno; destruição real não implementada. Teste gráfico smoke em Linux/Xvfb captura tela de configuração, não é teste completo do modpack ou do hardware do usuário. Não é 1.0.0.

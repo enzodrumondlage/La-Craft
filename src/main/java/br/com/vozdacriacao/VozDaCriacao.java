@@ -62,9 +62,10 @@ public final class VozDaCriacao implements ModInitializer {
         ArtefatoLaCraft.registrar();
         PoderesLaCraft.registrar();
         AcoesMundo.registrar();
+        DetritosVirtuais.registrar();
         ModelosVivos.registrar();
         SerLaCraft.registrar();
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{IndiceRecursos.limpar();OllamaLocal.parar();});
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{IndiceRecursos.limpar();OllamaLocal.parar();java.util.concurrent.CompletableFuture.runAsync(IAIntegrada::fechar);});
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());
@@ -118,7 +119,7 @@ public final class VozDaCriacao implements ModInitializer {
                 s.gerando=false;
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
                     s.pedido=erro==null?plano:null;
-                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada. Para IA gratuita: Mods > La Craft > IA > OLLAMA."),false);
+                    if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada. Para IA gratuita: Mods > La Craft > IA > INTEGRADA."),false);
                     else if(s.pedido!=null)p.sendMessage(Text.literal("§bPlano validado da IA: "+s.pedido.nome()),false);
                     else if(s.pedido==null)p.sendMessage(Text.literal("§ePlano indisponível."),false);
 

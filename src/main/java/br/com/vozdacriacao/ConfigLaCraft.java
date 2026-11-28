@@ -30,7 +30,7 @@ public final class ConfigLaCraft {
     public boolean sugar=true;
     public int velocidadeSugador=3;
     public int velocidadeConstrucao=8;
-    public String provedor="OLLAMA";
+    public String provedor="INTEGRADA";
     public String modelo="qwen2.5:3b";
     public String chaveApi="";
     public boolean permitirNuvem=false;
@@ -41,7 +41,7 @@ public final class ConfigLaCraft {
         qualidadeCasa=Math.max(1,Math.min(4,qualidadeCasa));volumeSons=Math.max(0,Math.min(100,volumeSons));
         velocidadeSugador=Math.max(1,Math.min(6,velocidadeSugador));
         velocidadeConstrucao=Math.max(2,Math.min(16,velocidadeConstrucao));
-        if(!java.util.Set.of("CATALOGO","OLLAMA","OPENAI").contains(provedor==null?"":provedor))provedor="CATALOGO";
+        if(!java.util.Set.of("CATALOGO","INTEGRADA","OLLAMA","OPENAI").contains(provedor==null?"":provedor))provedor="CATALOGO";
         if(modelo==null||!modelo.matches("[A-Za-z0-9_.:/-]{1,80}"))modelo="qwen2.5:3b";
         if(chaveApi==null||chaveApi.length()>512||chaveApi.chars().anyMatch(Character::isWhitespace))chaveApi="";
     }

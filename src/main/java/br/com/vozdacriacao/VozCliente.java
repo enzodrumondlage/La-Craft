@@ -28,6 +28,7 @@ public final class VozCliente implements ClientModInitializer {
     private static final List<Fragmento> fragmentos=new ArrayList<>();
     private record Fragmento(Vec3d origem,int estado,int jogador,int inicio){}
     @Override public void onInitializeClient(){
+        TesteGrafico.registrar();
         net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry.register(SerLaCraft.TIPO,RenderSer::new);
         net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.INSTANCE.register(ArtefatoLaCraft.ITEM,RenderArtefato::render);
         net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register((stack,tint)->{

@@ -18,11 +18,11 @@ final class AcoesMundo {
     private static final Map<UUID,Chuva> eventos=new HashMap<>();
     static void registrar(){
         ServerTickEvents.END_SERVER_TICK.register(AcoesMundo::tick);
-        ServerPlayConnectionEvents.DISCONNECT.register((h,s)->eventos.remove(h.player.getUuid()));
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->eventos.clear());
+        ServerPlayConnectionEvents.DISCONNECT.register((h,s)->{eventos.remove(h.player.getUuid());DetritosVirtuais.limpar(h.player.getUuid());});
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{eventos.clear();DetritosVirtuais.limparTudo();});
     }
     static boolean ocupado(ServerPlayerEntity p){return eventos.containsKey(p.getUuid());}
-    static void cancelar(ServerPlayerEntity p){eventos.remove(p.getUuid());}
+    static void cancelar(ServerPlayerEntity p){eventos.remove(p.getUuid());DetritosVirtuais.limpar(p.getUuid());}
     static boolean especial(Pedido.Tipo t){return t==Pedido.Tipo.TEMPO||t==Pedido.Tipo.CLIMA||t==Pedido.Tipo.CHUVA_ITEM||t==Pedido.Tipo.CHUVA_MOB||t==Pedido.Tipo.FENOMENO||t==Pedido.Tipo.CHUVA_MISTA;}
     private static boolean autorizado(ServerPlayerEntity p){return p.hasPermissionLevel(2)||p.getServer().isHost(p.getGameProfile());}
     static boolean executar(ServerPlayerEntity p,Pedido a){
@@ -65,10 +65,11 @@ final class AcoesMundo {
             var e=it.next();var c=e.getValue();var p=s.getPlayerManager().getPlayer(e.getKey());var a=c.pedido();
             int idade=s.getTicks()-c.inicio();
             if(p==null||!p.isAlive()||p.isSpectator()||!p.getAbilities().allowModifyWorld||p.getServerWorld()!=c.mundo()||idade>=a.escala()*20||(a.tipo()!=Pedido.Tipo.FENOMENO&&c.feitos()>=a.quantidade())){
+                DetritosVirtuais.limpar(e.getKey());
                 if(p!=null)p.sendMessage(Text.literal(a.tipo()==Pedido.Tipo.FENOMENO?"§bFenômeno encerrado.":"§bEvento encerrado: "+c.feitos()+" de "+a.quantidade()+" aparições."),false);it.remove();continue;
             }
             if(a.tipo()==Pedido.Tipo.FENOMENO){
-                Fenomenos.tick(c.mundo(),p,c.centro(),a.alvo(),idade,a.escala());continue;
+                Fenomenos.tick(c.mundo(),p,c.centro(),a.alvo(),idade,a.escala(),a.quantidade()==2);continue;
             }
             if(c.feitos()>=Math.max(1,((idade+5)*a.quantidade()+a.escala()*20-1)/(a.escala()*20)))continue;
             var w=c.mundo();var r=w.getRandom();BlockPos pos=c.centro().add(r.nextInt(9)-4,10,r.nextInt(9)-4);

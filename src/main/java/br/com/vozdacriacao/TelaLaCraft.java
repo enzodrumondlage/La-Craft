@@ -57,10 +57,10 @@ public final class TelaLaCraft extends Screen {
         }else{
             var prov=botao(x,y,w,"IA: "+rascunho.provedor,()->{
                 capturar();
-                rascunho.provedor=switch(rascunho.provedor){case "CATALOGO"->"OLLAMA";case "OLLAMA"->"OPENAI";default->"CATALOGO";};
+                rascunho.provedor=switch(rascunho.provedor){case "CATALOGO"->"INTEGRADA";case "INTEGRADA"->"OLLAMA";case "OLLAMA"->"OPENAI";default->"CATALOGO";};
                 rascunho.modelo=rascunho.provedor.equals("OPENAI")?"gpt-4o-mini":"qwen2.5:3b";atualizar();
             });prov.active=!remoto;
-            modelo=new TextFieldWidget(textRenderer,x,y+24,w,20,Text.literal("Modelo da IA"));modelo.setMaxLength(80);modelo.setText(rascunho.modelo);modelo.setEditable(!remoto);addDrawableChild(modelo);
+            modelo=new TextFieldWidget(textRenderer,x,y+24,w,20,Text.literal("Modelo da IA"));modelo.setMaxLength(80);modelo.setText(rascunho.modelo);modelo.setEditable(!remoto&&!rascunho.provedor.equals("INTEGRADA"));addDrawableChild(modelo);
             // A chave já salva nunca é mostrada; o campo vazio mantém a anterior.
             chave=new TextFieldWidget(textRenderer,x,y+48,w,20,Text.literal("Nova chave API"));
             chave.setMaxLength(512);chave.setPlaceholder(Text.literal(rascunho.chaveApi.isEmpty()?"Cole a nova chave API":"Chave salva — cole para substituir"));
@@ -82,7 +82,7 @@ public final class TelaLaCraft extends Screen {
         renderBackground(ctx);ctx.drawCenteredTextWithShadow(textRenderer,title,width/2,8,0x9BD8FF);
         super.render(ctx,mx,my,delta);
         if(!aviso.isEmpty())ctx.drawCenteredTextWithShadow(textRenderer,aviso,width/2,height-39,0xFF7777);
-        else if(height>=215)ctx.drawCenteredTextWithShadow(textRenderer,client!=null&&client.world!=null&&!client.isInSingleplayer()?"Servidor remoto controla IA e matéria.":(pagina==1?"API pode cobrar; use somente com autorização.":"Ajuste as opções e clique em Salvar."),width/2,height-39,0xBBBBBB);
+        else if(height>=215)ctx.drawCenteredTextWithShadow(textRenderer,client!=null&&client.world!=null&&!client.isInSingleplayer()?"Servidor remoto controla IA e matéria.":(pagina==1?(rascunho.provedor.equals("INTEGRADA")?"IA local: download inicial de 1,12 GB.":"API pode cobrar; use somente com autorização."):"Ajuste as opções e clique em Salvar."),width/2,height-39,0xBBBBBB);
     }
     @Override public void close(){if(client!=null)client.setScreen(anterior);}
 }

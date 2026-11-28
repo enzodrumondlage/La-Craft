@@ -17,7 +17,7 @@ final class AcoesTexto {
             Matcher dur=Pattern.compile("por ([0-9]{1,2}) segundos?").matcher(t);
             int segundos=dur.find()?Integer.parseInt(dur.group(1)):10;
             if(segundos<1||segundos>30)throw new IllegalArgumentException("Evento: 1 a 30 segundos");
-            return new Pedido(switch(tipo){case "onda"->"Tsunami";case "tremor"->"Terremoto";case "gravidade"->"Buraco negro";case "meteoros"->"Chuva de meteoros";default->"Furacão";},80,Pedido.Tipo.FENOMENO,List.of(),tipo,1,segundos);
+            return new Pedido(switch(tipo){case "onda"->"Tsunami";case "tremor"->"Terremoto";case "gravidade"->"Buraco negro";case "meteoros"->"Chuva de meteoros";default->"Furacão";},80,Pedido.Tipo.FENOMENO,List.of(),tipo,2,segundos);
         }
         String hora=switch(t){case "dia","amanhecer","manha","nascer do sol"->"0";case "meio-dia","meio dia"->"6000";case "tarde"->"9000";case "por do sol","entardecer"->"12000";case "noite","anoitecer"->"13000";case "meia-noite","meia noite"->"18000";case "madrugada"->"22000";default->null;};
         if(hora!=null)return Pedido.acao("Horário",Pedido.Tipo.TEMPO,hora,1,1);

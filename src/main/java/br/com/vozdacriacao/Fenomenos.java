@@ -9,11 +9,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.sound.SoundCategory;
 /** Fenômenos do jogo com movimento real e partículas limitadas; não danificam construções. */
 final class Fenomenos {
-    static void tick(ServerWorld w,ServerPlayerEntity p,BlockPos o,String tipo,int idade,int dur){
+    static void tick(ServerWorld w,ServerPlayerEntity p,BlockPos o,String tipo,int idade,int dur,boolean avancado){
         Vec3d centro=Vec3d.ofCenter(o);double fase=idade/20.0;
         if(tipo.equals("onda"))centro=centro.add(0,0,-7+14.0*idade/(dur*20.0));
         if(!w.isChunkLoaded(BlockPos.ofFloored(centro).getX()>>4,BlockPos.ofFloored(centro).getZ()>>4))return;
         int n=ConfigLaCraft.obter().perfilFPS==0?24:48;
+        if(avancado)DetritosVirtuais.tick(w,p,centro,tipo,idade,dur);
         if(ConfigLaCraft.obter().particulas){
             for(int j=0;j<n;j++){
                 double a=j*Math.PI*2/n+fase*4,h=(j%8)*.65,r=tipo.equals("gravidade")?5:1+h*.7;

@@ -1,0 +1,39 @@
+name: Teste gráfico do cliente
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  cliente:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Preparar ambiente gráfico e dependência
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb libgl1-mesa-dri libgl1 libasound2t64
+          mkdir -p runtime
+          curl --fail --location --retry 3 'https://cdn.modrinth.com/data/9eGKb6K1/versions/u5T0ji6n/voicechat-fabric-1.20.1-2.6.22.jar' -o runtime/voicechat.jar
+          echo 'e6d6a23b9e94a47446d8f2797182031f2f1c7710dc9540e0e3a7fea17a4fa675ca9655dd49566cbacc4b033b8a4b289f545846fba63e280970d8efa34891c7d2  runtime/voicechat.jar' | sha512sum -c -
+      - name: Renderizar cliente de desenvolvimento
+        run: |
+          LIBGL_ALWAYS_SOFTWARE=1 timeout 900 xvfb-run -a -s '-screen 0 1280x720x24' gradle runTesteGrafico --no-daemon
+          test -s build/testeGrafico/lacraft-grafico-ok.txt
+          test -s build/testeGrafico/lacraft-teste-grafico.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: teste-grafico
+          path: |
+            build/testeGrafico/lacraft-*.png
+            build/testeGrafico/lacraft-*.txt
+            build/testeGrafico/logs/latest.log
+            build/testeGrafico/crash-reports/
+          if-no-files-found: warn
