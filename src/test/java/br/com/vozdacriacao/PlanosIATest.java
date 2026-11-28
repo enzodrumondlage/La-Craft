@@ -42,6 +42,9 @@ public final class PlanosIATest {
         Pedido modelo=IAConstrucoes.validar("{\"nome\":\"Macaco\",\"tipo\":\"modelo\",\"pecas\":["+peca+","+peca+","+peca+"]}");
         if(modelo.tipo()!=Pedido.Tipo.MODELO||ModeloSpec.ler(modelo.alvo()).size()!=3)throw new AssertionError("Modelo");
         IAConstrucoes.validarIntencao("macaco animado","",modelo);
+        String visual="{\"x\":7,\"y\":0,\"z\":7,\"sx\":2,\"sy\":12,\"sz\":2,\"cor\":\"#805020\",\"animacao\":\"fixo\"}";
+        var v=VisualArtefato.ler("["+visual+"]");eq(v.pecas().size(),1);
+        try{VisualArtefato.ler("["+visual.replace("\"sy\":12","\"sy\":20")+"]");throw new AssertionError("Visual fora do limite");}catch(IllegalArgumentException esperado){}
         System.out.println("Planos IA: testes aprovados");
     }
 }

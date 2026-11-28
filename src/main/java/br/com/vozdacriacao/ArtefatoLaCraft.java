@@ -17,12 +17,13 @@ public final class ArtefatoLaCraft extends Item {
     private ArtefatoLaCraft(){super(new Item.Settings().maxCount(1).rarity(Rarity.RARE));}
     static void registrar(){Registry.register(Registries.ITEM,ID,ITEM);}
     static boolean entregar(ServerPlayerEntity p,Pedido pedido){
-        try{ArtefatoSpec.ler(pedido.alvo());}catch(RuntimeException e){return false;}
-        ItemStack s=new ItemStack(ITEM);s.getOrCreateNbt().putString("lacraft_spec",pedido.alvo());s.setCustomName(Text.literal(pedido.nome()));
+        String[] dados=pedido.alvo().split("\\|",2);
+        try{ArtefatoSpec.ler(dados[0]);if(dados.length==2)VisualArtefato.ler(dados[1]);}catch(RuntimeException e){return false;}
+        ItemStack s=new ItemStack(ITEM);s.getOrCreateNbt().putString("lacraft_spec",dados[0]);if(dados.length==2)s.getOrCreateNbt().putString("lacraft_visual",dados[1]);s.setCustomName(Text.literal(pedido.nome()));
         if(!p.getInventory().insertStack(s))p.dropItem(s,false);return true;
     }
     static ArtefatoSpec spec(ItemStack s){
-        try{return ArtefatoSpec.ler(s.getOrCreateNbt().getString("lacraft_spec"));}catch(RuntimeException e){return null;}
+        try{return ArtefatoSpec.ler(s.hasNbt()?s.getNbt().getString("lacraft_spec"):"");}catch(RuntimeException e){return null;}
     }
     @Override public TypedActionResult<ItemStack> use(World w,net.minecraft.entity.player.PlayerEntity player,Hand hand){
         ItemStack s=player.getStackInHand(hand);ArtefatoSpec a=spec(s);
@@ -39,10 +40,22 @@ public final class ArtefatoLaCraft extends Item {
                     case "resistencia"->StatusEffects.RESISTANCE;
                     case "levitacao"->StatusEffects.SLOW_FALLING;
                     case "brilho"->StatusEffects.GLOWING;
+                    case "visao_noturna"->StatusEffects.NIGHT_VISION;
+                    case "resistencia_fogo"->StatusEffects.FIRE_RESISTANCE;
+                    case "regeneracao"->StatusEffects.REGENERATION;
+                    case "pressa"->StatusEffects.HASTE;
                     default->null;
                 };
                 if(ef!=null)p.addStatusEffect(new StatusEffectInstance(ef,ticks,0));
                 if(efeito.equals("cura"))p.heal(4);
+                if(efeito.equals("repulsao")||efeito.equals("atracao")){
+                    int n=0;
+                    for(var alvo:sw.getOtherEntities(p,p.getBoundingBox().expand(5),e->efeito.equals("atracao")?e instanceof net.minecraft.entity.ItemEntity:e instanceof net.minecraft.entity.mob.MobEntity)){
+                        if(n++>=24)break;
+                        var delta=alvo.getPos().subtract(p.getPos()).normalize().multiply(efeito.equals("atracao")?-.6:.6);
+                        alvo.addVelocity(delta.x,.12,delta.z);alvo.velocityModified=true;
+                    }
+                }
                 if(efeito.equals("levitacao"))p.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION,Math.min(40,ticks),0));
                 if(efeito.equals("nuvem"))sw.spawnParticles(ParticleTypes.CLOUD,p.getX(),p.getY()+1,p.getZ(),35,.8,.4,.8,.04);
                 if(efeito.equals("musica"))sw.playSound(null,p.getBlockPos(),net.minecraft.sound.SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME,net.minecraft.sound.SoundCategory.PLAYERS,.6f,1.2f);
@@ -58,7 +71,7 @@ public final class ArtefatoLaCraft extends Item {
         ArtefatoSpec a=spec(s);if(a!=null){
             tooltip.add(Text.literal("Efeitos: "+String.join(", ",a.efeitos())));
             tooltip.add(Text.literal("Duração: "+a.duracao()+" s | Recarga: "+a.recarga()+" s"));
-            tooltip.add(Text.literal("Botão direito para ativar"));
+            tooltip.add(Text.literal(s.hasNbt()&&s.getNbt().contains("lacraft_visual")?"Visual original • Botão direito para ativar":"Visual básico • Botão direito para ativar"));
         }
     }
 }

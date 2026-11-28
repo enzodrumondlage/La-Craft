@@ -28,13 +28,14 @@ public final class VozCliente implements ClientModInitializer {
     private static final List<Fragmento> fragmentos=new ArrayList<>();
     private record Fragmento(Vec3d origem,int estado,int jogador,int inicio){}
     @Override public void onInitializeClient(){
+        net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.INSTANCE.register(ArtefatoLaCraft.ITEM,RenderArtefato::render);
         net.fabricmc.fabric.api.client.rendering.v1.ColorProviderRegistry.ITEM.register((stack,tint)->{
             var a=ArtefatoLaCraft.spec(stack);return a==null?0xffffff:a.cor();
         },ArtefatoLaCraft.ITEM);
         voz=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vozdacriacao.voz",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_F,"category.vozdacriacao"));
         sugar=KeyBindingHelper.registerKeyBinding(new KeyBinding("key.vozdacriacao.sugar",InputUtil.Type.KEYSYM,GLFW.GLFW_KEY_G,"category.vozdacriacao"));
         ClientTickEvents.END_CLIENT_TICK.register(VozCliente::tick);
-        ClientPlayConnectionEvents.DISCONNECT.register((h,c)->limpar());
+        ClientPlayConnectionEvents.DISCONNECT.register((h,c)->{limpar();RenderArtefato.limpar();});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.HUD,(c,h,b,s)->{int m=b.readVarInt(),k=b.readVarInt();String n=b.readString(80);boolean inf=b.isReadable()&&b.readBoolean();int f=b.isReadable()?b.readVarInt():0,tt=b.isReadable()?b.readVarInt():0;c.execute(()->{materia=m;custo=k;pedido=n;ilimitado=inf;if(total>0&&tt==0){if(feitos>=total)PreviaHud.ate=ticks+100;else PreviaHud.limpar();}feitos=f;total=tt;});});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.PREVIA,(c,h,b,s)->{String n=b.readString(80);int qtd=b.readVarInt();if(qtd<0||qtd>800)return;List<Pedido.Celula> cs=new ArrayList<>();for(int i=0;i<qtd;i++)cs.add(new Pedido.Celula(b.readInt(),b.readInt(),b.readInt(),b.readString(120)));c.execute(()->PreviaHud.receber(n,cs,ticks));});
         ClientPlayNetworking.registerGlobalReceiver(VozDaCriacao.EFEITO,(c,h,b,s)->{Vec3d o=Vec3d.ofCenter(b.readBlockPos());int e=b.readVarInt(),id=b.readVarInt();c.execute(()->{if(ConfigLaCraft.obter().particulas&&fragmentos.size()<(ConfigLaCraft.obter().perfilFPS==0?24:ConfigLaCraft.obter().perfilFPS==1?80:250))fragmentos.add(new Fragmento(o,e,id,ticks));});});

@@ -3,7 +3,7 @@ import com.google.gson.*;
 import java.util.*;
 /** Especificação declarativa persistente, limitada e sem execução de código. */
 public record ArtefatoSpec(int cor,List<String> efeitos,int duracao,int recarga){
-    static final Set<String> VALIDOS=Set.of("cura","respirar","velocidade","salto","invisivel","resistencia","levitacao","brilho","nuvem","musica");
+    static final Set<String> VALIDOS=Set.of("cura","respirar","velocidade","salto","invisivel","resistencia","levitacao","brilho","nuvem","musica","visao_noturna","resistencia_fogo","regeneracao","pressa","repulsao","atracao");
     public ArtefatoSpec{
         efeitos=List.copyOf(new LinkedHashSet<>(efeitos));
         if(cor<0||cor>0xffffff||efeitos.isEmpty()||efeitos.size()>5||!VALIDOS.containsAll(efeitos)||duracao<5||duracao>120||recarga<2||recarga>30)throw new IllegalArgumentException("Artefato inválido");
@@ -13,7 +13,10 @@ public record ArtefatoSpec(int cor,List<String> efeitos,int duracao,int recarga)
         if(!cor.matches("#[a-fA-F0-9]{6}"))throw new IllegalArgumentException("Cor inválida");
         var a=p.getAsJsonArray("efeitos");if(a.size()>5)throw new IllegalArgumentException("Efeitos demais");
         List<String> e=new ArrayList<>();for(var v:a)e.add(v.getAsString());
-        return new ArtefatoSpec(Integer.parseInt(cor.substring(1),16),e,inteiro(p,"duracao"),inteiro(p,"recarga")).pedido(nome);
+        Pedido pedido=new ArtefatoSpec(Integer.parseInt(cor.substring(1),16),e,inteiro(p,"duracao"),inteiro(p,"recarga")).pedido(nome);
+        if(!p.has("visual"))return pedido;
+        var visual=p.getAsJsonArray("visual");VisualArtefato.ler(visual);
+        return new Pedido(pedido.nome(),pedido.custo()+visual.size()*3,Pedido.Tipo.ARTEFATO,List.of(),pedido.alvo()+"|"+visual,1,1);
     }
     private static int inteiro(JsonObject p,String k){var v=p.get(k).getAsJsonPrimitive();if(!v.isNumber())throw new IllegalArgumentException("Número inválido");return v.getAsBigDecimal().intValueExact();}
     Pedido pedido(String nome){
@@ -21,6 +24,7 @@ public record ArtefatoSpec(int cor,List<String> efeitos,int duracao,int recarga)
         return new Pedido(nome,40+efeitos.size()*35+duracao,Pedido.Tipo.ARTEFATO,List.of(),dados,1,1);
     }
     static ArtefatoSpec ler(String s){
+        s=s.split("\\|",2)[0];
         if(s.length()>160)throw new IllegalArgumentException("Dados longos");
         String[] a=s.split(";",-1);if(a.length!=4)throw new IllegalArgumentException("Dados inválidos");
         return new ArtefatoSpec(Integer.parseInt(a[0],16),Arrays.asList(a[3].split(",")),Integer.parseInt(a[1]),Integer.parseInt(a[2]));
