@@ -51,6 +51,7 @@ public final class MotorCriacao {
     }
     public static Resultado iniciar(ServerPlayerEntity p,Pedido pedido){
         ServerWorld w=p.getServerWorld();
+        if(pedido.tipo()==Pedido.Tipo.SER)return new Resultado(SerLaCraft.criar(p,pedido),null);
         if(pedido.tipo()==Pedido.Tipo.MODELO)return new Resultado(ModelosVivos.criar(p,pedido),null);
         if(AcoesMundo.especial(pedido.tipo()))return new Resultado(AcoesMundo.executar(p,pedido),null);
         if(PoderesLaCraft.especial(pedido.tipo()))return new Resultado(PoderesLaCraft.executar(p,pedido),null);

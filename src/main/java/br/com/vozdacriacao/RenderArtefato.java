@@ -39,12 +39,13 @@ final class RenderArtefato {
     static void render(ItemStack stack,ModelTransformationMode mode,MatrixStack m,VertexConsumerProvider buffers,int light,int overlay){
         var a=ArtefatoLaCraft.spec(stack);int cor=a==null?0x99bbff:a.cor();
         String json=stack.hasNbt()?stack.getNbt().getString("lacraft_visual"):"";
+        var mc=MinecraftClient.getInstance();double t=mc.world==null?0:mc.world.getTime()+mc.getTickDelta();
+        renderVisual(json,cor,mode!=ModelTransformationMode.GUI||ConfigLaCraft.obter().perfilFPS!=0,t,m,buffers,light,overlay);
+    }
+    static void renderVisual(String json,int cor,boolean anima,double t,MatrixStack m,VertexConsumerProvider buffers,int light,int overlay){
         VisualArtefato visual;
         if(json.isEmpty())visual=MODELOS.computeIfAbsent("legacy"+cor,k->VisualArtefato.legado(cor));
         else try{visual=MODELOS.computeIfAbsent(json,VisualArtefato::ler);}catch(RuntimeException ex){visual=VisualArtefato.legado(cor);}
-        var mc=MinecraftClient.getInstance();double t=mc.world==null?0:mc.world.getTime()+mc.getTickDelta();
-        // Nunca corta peças do modelo; o perfil leve só desliga animações no inventário.
-        boolean anima=mode!=ModelTransformationMode.GUI||ConfigLaCraft.obter().perfilFPS!=0;
         for(var p:visual.pecas()){
             m.push();
             float sx=p.sx()/16,sy=p.sy()/16,sz=p.sz()/16;

@@ -82,3 +82,6 @@ O planejador pode definir até 16 cuboides, cores independentes, mapa de pixels 
 
 ### 0.9.9 experimental
 O planejador pode solicitar até duas pesquisas adicionais no índice imutável de recursos registrados, por termos escolhidos pela IA. Resultados são validados por categoria. Limite de desejo por voz/comando ampliado para 768 caracteres; chat vanilla continua limitado pelo Minecraft. Validação de pares de camas e portas; tentativa de uso de blocos decorativos simples dos mods de móveis com validação de registro e restrições. Contexto Ollama de 6144 tokens pode aumentar consumo de RAM. Não é versão 1.0.0; falta teste visual, modelos vivos e veículos inéditos funcionais, arquitetura completa e IA embutida. 
+
+### 0.9.10 experimental
+Entidade procedural própria, textura e animações por peça, dados persistentes, caminhada e montaria terrestre experimental. Colisão e tamanho ainda fixos, sem voo, física de rodas ou IA complexa. Novo workflow de GameTest no Windows em servidor de desenvolvimento com Fabric e Voice Chat; não representa teste gráfico, do modpack completo ou do executável. Não é 1.0.0.

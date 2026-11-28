@@ -1,0 +1,37 @@
+name: Testes de execução Windows
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  gametest:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+      - name: Preparar dependência de execução verificada
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force runtime | Out-Null
+          Invoke-WebRequest 'https://cdn.modrinth.com/data/9eGKb6K1/versions/u5T0ji6n/voicechat-fabric-1.20.1-2.6.22.jar' -OutFile runtime/voicechat.jar
+          if ((Get-FileHash runtime/voicechat.jar -Algorithm SHA512).Hash.ToLower() -ne 'e6d6a23b9e94a47446d8f2797182031f2f1c7710dc9540e0e3a7fea17a4fa675ca9655dd49566cbacc4b033b8a4b289f545846fba63e280970d8efa34891c7d2') { throw 'Hash incorreto' }
+      - name: Testar lógica e servidor Minecraft
+        shell: pwsh
+        run: |
+          gradle check runGametest --no-daemon
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultados-windows-gametest
+          path: |
+            build/gametest/logs/latest.log
+            build/gametest-results.xml
+            build/gametest/build/gametest-results.xml
+          if-no-files-found: warn

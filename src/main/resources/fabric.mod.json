@@ -17,6 +17,9 @@
     ],
     "modmenu": [
       "br.com.vozdacriacao.MenuLaCraft"
+    ],
+    "fabric-gametest": [
+      "br.com.vozdacriacao.TesteMundo"
     ]
   },
   "depends": {

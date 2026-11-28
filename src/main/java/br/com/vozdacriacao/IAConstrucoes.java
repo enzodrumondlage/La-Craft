@@ -31,6 +31,7 @@ public final class IAConstrucoes {
         Para cajado, cetro e varinha, procure staff, stave, scepter, sceptre e wand nos itens reais do catálogo. Retorne tipo item com ID existente; não crie artefato genérico se houver equipamento apropriado. Se pedirem efeitos específicos não comprovados, não os invente. Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
         Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos.
+        Para criaturas originais terrestres e montarias terrestres originais use {"nome":"nome do ser","tipo":"ser","montavel":false,"anda":true,"visual":[...]}. Visual segue o esquema de 3 a 16 peças coloridas com texturas e animações de artefato. O ser tem caminhada simples e pode ser montado se montavel=true; não possui voo, nado avançado, habilidades especiais, rodas com física própria nem colisão personalizada. Não prometa essas características. Prefira entidade real já instalada quando adequada.
         Para modelos decorativos originais e animados use {"nome":"nome do objeto pedido","tipo":"modelo","pecas":[{"x":0,"y":0,"z":0,"sx":2,"sy":3,"sz":1,"bloco":"brown_concrete","movimento":"fixo"}]}. Gere 3 a 24 peças com posições x/z -10 a 10, y 0 a 12, tamanhos sx/sy/sz 0.2 a 8. Movimentos fixo, balanco, giro, flutuar. Materiais: concretos branco, preto, cinza, cinza claro, marrom, laranja, amarelo, vermelho, azul, verde, rosa (IDs em inglês), brown_terracotta, terracotta, black_wool, white_wool, brown_wool, glass, iron_block, gold_block, oak_planks, sea_lantern, quartz_block. Cada peça representa um elemento da geometria. Se pedirem um macaco, desenhe cabeça, olhos, corpo, braços, pernas e cauda; nunca burro ou outro animal. Ônibus, moto e avião de construção são modelos decorativos, não mobs.
         Para arquitetura personalizada prefira tipo arquitetura: {"nome":"Casa","tipo":"arquitetura","caixas":[{"x1":-8,"y1":0,"z1":-8,"x2":8,"y2":0,"z2":8,"bloco":"smooth_stone","oco":false}]}.
         Para quartos e banheiros explícitos represente cada quarto com um par cama_pe/cama_cabeca e cada banheiro com um cauldron. Porta dupla exige duas portas adjacentes. Janelas pretas use black_stained_glass. Dois ou mais andares exigem pisos separados e escadas. Não declare contagem sem geometria.
@@ -111,10 +112,10 @@ public final class IAConstrucoes {
         if(Pedido.palavra(t,"macaco|macacos")&&!Pedido.palavra(t,"chuva")){
             if(p.tipo()==Pedido.Tipo.MOB){
                 if(!p.alvo().matches(".*(?:monkey|macaque|ape|chimp|gorilla|orangutan|macaco).*"))throw new IllegalArgumentException("Macaco não pode ser substituído por outro animal");
-            }else if(p.tipo()!=Pedido.Tipo.MODELO||!Pedido.palavra(Pedido.normal(p.nome()),"macaco|monkey"))throw new IllegalArgumentException("Desenhe um modelo de macaco animado");
+            }else if((p.tipo()!=Pedido.Tipo.MODELO&&p.tipo()!=Pedido.Tipo.SER)||!Pedido.palavra(Pedido.normal(p.nome()),"macaco|monkey"))throw new IllegalArgumentException("Desenhe um modelo de macaco animado");
         }
         if(Pedido.palavra(t,"construcao|construa|estatua|modelo|animado")&&Pedido.palavra(t,"onibus|moto|aviao|macaco")){
-            if(p.tipo()!=Pedido.Tipo.MODELO&&p.tipo()!=Pedido.Tipo.VOXEL&&p.tipo()!=Pedido.Tipo.RESIDENCIA)throw new IllegalArgumentException("O pedido é um modelo ou construção, não um mob/item");
+            if(p.tipo()!=Pedido.Tipo.MODELO&&p.tipo()!=Pedido.Tipo.SER&&p.tipo()!=Pedido.Tipo.VOXEL&&p.tipo()!=Pedido.Tipo.RESIDENCIA)throw new IllegalArgumentException("O pedido é um modelo ou construção, não um mob/item");
         }
         if(Pedido.palavra(t,"onibus")&&p.tipo()==Pedido.Tipo.MOB)throw new IllegalArgumentException("Ônibus não é uma criatura");
         if(Pedido.palavra(t,"mansao|casa")&&p.tipo()!=Pedido.Tipo.RESIDENCIA&&p.tipo()!=Pedido.Tipo.CASA)throw new IllegalArgumentException("Pedido de casa exige arquitetura");
@@ -171,6 +172,7 @@ public final class IAConstrucoes {
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");
                 return Residencia.planejar(nome,plano.has("quartos")?num(plano,"quartos",1,4):(plano.get("grande").getAsBoolean()?2:1),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
             }
+            if(tipo.equals("ser"))return SerSpec.pedido(nome,plano);
             if(tipo.equals("modelo"))return ModeloSpec.pedido(nome,plano);
             if(tipo.equals("artefato"))return ArtefatoSpec.validar(nome,plano);
             if(tipo.equals("item")||tipo.equals("mob")){

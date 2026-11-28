@@ -53,6 +53,8 @@ public final class PlanosIATest {
         var consulta=ConsultaIA.ler(com.google.gson.JsonParser.parseString("{\"categoria\":\"item\",\"termos\":[\"lanterna\",\"lantern\"]}").getAsJsonObject());eq(consulta.termos().size(),2);
         IAConstrucoes.validarIntencao("lanterna","Itens: minecraft:stick\nItens: minecraft:lantern",Pedido.dinamico("Lanterna",Pedido.Tipo.ITEM,"minecraft:lantern",1,1));
         try{RequisitosCasa.verificar("casa",new Pedido("Porta incompleta",1,Pedido.Tipo.RESIDENCIA,java.util.List.of(new Pedido.Celula(0,1,0,"porta_baixo"))));throw new AssertionError("Porta incompleta");}catch(IllegalArgumentException esperado){}
+        var ser=IAConstrucoes.validar("{\"nome\":\"Mascote original\",\"tipo\":\"ser\",\"montavel\":true,\"anda\":true,\"visual\":["+visual+","+visual+","+visual+"]}");
+        if(ser.tipo()!=Pedido.Tipo.SER||!SerSpec.ler(ser.alvo()).montavel())throw new AssertionError("Ser");
         System.out.println("Planos IA: testes aprovados");
     }
 }
