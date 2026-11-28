@@ -55,6 +55,11 @@ public final class PlanosIATest {
         try{RequisitosCasa.verificar("casa",new Pedido("Porta incompleta",1,Pedido.Tipo.RESIDENCIA,java.util.List.of(new Pedido.Celula(0,1,0,"porta_baixo"))));throw new AssertionError("Porta incompleta");}catch(IllegalArgumentException esperado){}
         var ser=IAConstrucoes.validar("{\"nome\":\"Mascote original\",\"tipo\":\"ser\",\"montavel\":true,\"anda\":true,\"visual\":["+visual+","+visual+","+visual+"]}");
         if(ser.tipo()!=Pedido.Tipo.SER||!SerSpec.ler(ser.alvo()).montavel())throw new AssertionError("Ser");
+        String projeto="{\"nome\":\"Casa\",\"tipo\":\"planta2\",\"andares\":1,\"parede\":\"white_concrete\",\"porta_dupla\":true,\"janelas_pretas\":true,\"entrada\":\"h\",\"comodos\":[{\"id\":\"h\",\"funcao\":\"hall\",\"andar\":0,\"x1\":0,\"z1\":0,\"x2\":8,\"z2\":10},{\"id\":\"q\",\"funcao\":\"quarto\",\"andar\":0,\"x1\":8,\"z1\":0,\"x2\":16,\"z2\":10},{\"id\":\"b\",\"funcao\":\"banheiro\",\"andar\":0,\"x1\":16,\"z1\":0,\"x2\":22,\"z2\":10}],\"ligacoes\":[[\"h\",\"q\"],[\"q\",\"b\"]]}";
+        var casa2=IAConstrucoes.validar(projeto);
+        IAConstrucoes.validarIntencao("casa com um quarto e um banheiro privativo, porta dupla e janelas pretas","",casa2);
+        rejeitar(projeto.replace("[\"q\",\"b\"]","[\"h\",\"b\"]"));
+        try{IAConstrucoes.validarIntencao("casa com dois quartos","",casa2);throw new AssertionError("Quantidade incorreta");}catch(IllegalArgumentException esperado){}
         System.out.println("Planos IA: testes aprovados");
     }
 }

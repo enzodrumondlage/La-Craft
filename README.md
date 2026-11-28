@@ -85,3 +85,6 @@ O planejador pode solicitar até duas pesquisas adicionais no índice imutável 
 
 ### 0.9.10 experimental
 Entidade procedural própria, textura e animações por peça, dados persistentes, caminhada e montaria terrestre experimental. Colisão e tamanho ainda fixos, sem voo, física de rodas ou IA complexa. Novo workflow de GameTest no Windows em servidor de desenvolvimento com Fabric e Voice Chat; não representa teste gráfico, do modpack completo ou do executável. Não é 1.0.0.
+
+### 0.9.11 experimental — projeto por ambientes
+Novo formato planta2: a IA escolhe retângulos de ambientes, funções e ligações; o motor rejeita interiores sobrepostos, ambientes desconectados, piso superior sem apoio e suítes ausentes quando solicitadas. Até dois andares, escada entre halls alinhados, portas orientadas, entrada dupla e janelas pretas. Piscinas e jardins vinculados ao projeto. Ainda não verifica navegação física completa, decoração realista ou qualidade visual; não é a versão final. Mantém o GameTest de servidor Windows e os testes anteriores.

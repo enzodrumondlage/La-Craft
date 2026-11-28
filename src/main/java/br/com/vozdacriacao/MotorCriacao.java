@@ -117,7 +117,14 @@ public final class MotorCriacao {
         if(v.isEmpty()||v.size()> (residencia?16000:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
         return new Resultado(true,new Obra(w,v,pedido.custo(),residencia));
     }
-    private static BlockState estadoResidencia(String b){
+    static BlockState estadoResidencia(String b){
+        if(b.matches("porta_(norte|leste)_[ed]_(baixo|cima)")){
+            String[] a=b.split("_");
+            return Blocks.OAK_DOOR.getDefaultState().with(DoorBlock.FACING,a[1].equals("leste")?Direction.EAST:Direction.NORTH)
+                .with(DoorBlock.HINGE,a[2].equals("d")?net.minecraft.block.enums.DoorHinge.RIGHT:net.minecraft.block.enums.DoorHinge.LEFT)
+                .with(DoorBlock.HALF,a[3].equals("baixo")?net.minecraft.block.enums.DoubleBlockHalf.LOWER:net.minecraft.block.enums.DoubleBlockHalf.UPPER);
+        }
+        if(b.equals("escada_sul"))return Blocks.QUARTZ_STAIRS.getDefaultState().with(StairsBlock.FACING,Direction.SOUTH);
         if(b.contains(":")){
             var id=net.minecraft.util.Identifier.tryParse(b);if(id==null||!net.minecraft.registry.Registries.BLOCK.containsId(id))return null;
             // Somente recursos decorativos comuns, não máquinas ou blocos especiais.
