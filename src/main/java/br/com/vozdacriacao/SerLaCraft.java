@@ -19,13 +19,18 @@ public final class SerLaCraft extends PathAwareEntity {
     private static final TrackedData<String> VISUAL=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.STRING);
     private static final TrackedData<Boolean> MONTAVEL=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Boolean> ANDA=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.BOOLEAN);
+    private static final TrackedData<Float> LARGURA=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> ALTURA=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> COMPRIMENTO=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> VELOCIDADE=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Boolean> VEICULO=DataTracker.registerData(SerLaCraft.class,TrackedDataHandlerRegistry.BOOLEAN);
     static final EntityType<SerLaCraft> TIPO=EntityType.Builder.create(SerLaCraft::new,SpawnGroup.CREATURE).setDimensions(1f,1.5f).maxTrackingRange(8).build("vozdacriacao:ser");
     public SerLaCraft(EntityType<? extends PathAwareEntity> tipo,World w){super(tipo,w);}
     static void registrar(){
         Registry.register(Registries.ENTITY_TYPE,new Identifier("vozdacriacao","ser"),TIPO);
         FabricDefaultAttributeRegistry.register(TIPO,MobEntity.createMobAttributes().add(EntityAttributes.GENERIC_MAX_HEALTH,24).add(EntityAttributes.GENERIC_MOVEMENT_SPEED,.24));
     }
-    @Override protected void initDataTracker(){super.initDataTracker();dataTracker.startTracking(VISUAL,"");dataTracker.startTracking(MONTAVEL,false);dataTracker.startTracking(ANDA,false);}
+    @Override protected void initDataTracker(){super.initDataTracker();dataTracker.startTracking(VISUAL,"");dataTracker.startTracking(MONTAVEL,false);dataTracker.startTracking(ANDA,false);dataTracker.startTracking(LARGURA,1f);dataTracker.startTracking(ALTURA,1.5f);dataTracker.startTracking(COMPRIMENTO,1f);dataTracker.startTracking(VELOCIDADE,.25f);dataTracker.startTracking(VEICULO,false);}
     @Override protected void initGoals(){
         goalSelector.add(0,new SwimGoal(this));
         goalSelector.add(3,new WanderAroundFarGoal(this,1.0){
@@ -34,11 +39,24 @@ public final class SerLaCraft extends PathAwareEntity {
         });
         goalSelector.add(5,new LookAroundGoal(this));
     }
-    void aplicar(SerSpec s){dataTracker.set(VISUAL,s.visual());dataTracker.set(MONTAVEL,s.montavel());dataTracker.set(ANDA,s.anda());setPersistent();}
+    void aplicar(SerSpec s){dataTracker.set(VISUAL,s.visual());dataTracker.set(MONTAVEL,s.montavel());dataTracker.set(ANDA,s.anda());dataTracker.set(LARGURA,s.largura());dataTracker.set(ALTURA,s.altura());dataTracker.set(COMPRIMENTO,s.comprimento());dataTracker.set(VELOCIDADE,s.velocidade());dataTracker.set(VEICULO,s.modo().equals("veiculo"));calculateDimensions();setPersistent();}
+    float largura(){return dataTracker.get(LARGURA);}
+    float altura(){return dataTracker.get(ALTURA);}
+    float comprimento(){return dataTracker.get(COMPRIMENTO);}
+    float velocidade(){return dataTracker.get(VELOCIDADE);}
+    boolean veiculo(){return dataTracker.get(VEICULO);}
+    @Override public EntityDimensions getDimensions(EntityPose pose){
+        if(dataTracker==null)return super.getDimensions(pose);
+        try{return EntityDimensions.changing(Math.max(largura(),comprimento()),altura());}catch(IllegalStateException|NullPointerException e){return super.getDimensions(pose);}
+    }
+    @Override public void onTrackedDataSet(TrackedData<?> data){
+        super.onTrackedDataSet(data);
+        if(data.equals(LARGURA)||data.equals(ALTURA)||data.equals(COMPRIMENTO))calculateDimensions();
+    }
     String visual(){return dataTracker.get(VISUAL);}
     boolean montavel(){return dataTracker.get(MONTAVEL);}
-    @Override public void writeCustomDataToNbt(NbtCompound n){super.writeCustomDataToNbt(n);n.putString("lc_visual",visual());n.putBoolean("lc_montavel",montavel());n.putBoolean("lc_anda",dataTracker.get(ANDA));}
-    @Override public void readCustomDataFromNbt(NbtCompound n){super.readCustomDataFromNbt(n);try{aplicar(new SerSpec(n.getBoolean("lc_montavel"),n.getBoolean("lc_anda"),n.getString("lc_visual")));}catch(RuntimeException ex){dataTracker.set(VISUAL,"");dataTracker.set(MONTAVEL,false);dataTracker.set(ANDA,false);}}
+    @Override public void writeCustomDataToNbt(NbtCompound n){super.writeCustomDataToNbt(n);n.putString("lc_visual",visual());n.putBoolean("lc_montavel",montavel());n.putBoolean("lc_anda",dataTracker.get(ANDA));if(!visual().isEmpty())n.putString("lc_spec",new SerSpec(montavel(),dataTracker.get(ANDA),visual(),veiculo()?"veiculo":"criatura",velocidade(),largura(),altura(),comprimento()).json());}
+    @Override public void readCustomDataFromNbt(NbtCompound n){super.readCustomDataFromNbt(n);try{aplicar(n.contains("lc_spec")?SerSpec.ler(n.getString("lc_spec")):new SerSpec(n.getBoolean("lc_montavel"),n.getBoolean("lc_anda"),n.getString("lc_visual")));}catch(RuntimeException ex){dataTracker.set(VISUAL,"");dataTracker.set(MONTAVEL,false);dataTracker.set(ANDA,false);}}
     @Override protected ActionResult interactMob(PlayerEntity p,Hand h){
         if(montavel()&&!p.isSneaking()&&!hasPassengers()&&!p.isSpectator()){
             if(!getWorld().isClient)p.startRiding(this);return ActionResult.success(getWorld().isClient);
@@ -50,7 +68,7 @@ public final class SerLaCraft extends PathAwareEntity {
         if(getControllingPassenger() instanceof PlayerEntity p){
             setYaw(p.getYaw());setPitch(p.getPitch()*.25f);bodyYaw=getYaw();headYaw=getYaw();
             if(isLogicalSideForUpdatingMovement()){
-                setMovementSpeed(.25f);super.travel(new Vec3d(p.sidewaysSpeed*.5,0,p.forwardSpeed<0?p.forwardSpeed*.4:p.forwardSpeed));
+                setMovementSpeed(velocidade());super.travel(new Vec3d(p.sidewaysSpeed*(veiculo()?0:.5),0,p.forwardSpeed<0?p.forwardSpeed*.4:p.forwardSpeed));
             }else setVelocity(Vec3d.ZERO);
             return;
         }

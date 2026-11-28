@@ -9,6 +9,7 @@ final class TesteOllama {
     static CompletableFuture<String> testar(String modelo){
         return CompletableFuture.supplyAsync(()->{
             try{
+                if(!OllamaLocal.iniciar())return "Ollama indisponível; instale o serviço local.";
                 var http=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).followRedirects(HttpClient.Redirect.NEVER).build();
                 var req=HttpRequest.newBuilder(URI.create("http://127.0.0.1:11434/api/tags")).timeout(Duration.ofSeconds(5)).GET().build();
                 var res=http.send(req,HttpResponse.BodyHandlers.ofInputStream());

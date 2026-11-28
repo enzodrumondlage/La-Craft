@@ -64,7 +64,7 @@ public final class VozDaCriacao implements ModInitializer {
         AcoesMundo.registrar();
         ModelosVivos.registrar();
         SerLaCraft.registrar();
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->IndiceRecursos.limpar());
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{IndiceRecursos.limpar();OllamaLocal.parar();});
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());

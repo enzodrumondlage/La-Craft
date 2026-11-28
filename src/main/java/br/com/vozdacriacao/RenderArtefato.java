@@ -20,9 +20,10 @@ final class RenderArtefato {
         Chave k=new Chave(p.cor(),p.detalhe(),p.pixels());
         Identifier existente=TEXTURAS.get(k);if(existente!=null)return existente;
         if(TEXTURAS.size()>=128)return BASE;
-        NativeImage img=new NativeImage(8,8,false);
-        for(int y=0;y<8;y++)for(int x=0;x<8;x++){
-            char px=p.pixels().charAt(y*8+x);int rgb=px=='1'?p.detalhe():p.cor();
+        int lado=p.pixels().length()==256?16:8;
+        NativeImage img=new NativeImage(lado,lado,false);
+        for(int y=0;y<lado;y++)for(int x=0;x<lado;x++){
+            char px=p.pixels().charAt(y*lado+x);int rgb=px=='1'?p.detalhe():p.cor();
             if(px=='2')rgb=((rgb>>1)&0x7f7f7f);
             int abgr=0xff000000|((rgb&255)<<16)|(rgb&0xff00)|((rgb>>16)&255);
             img.setColor(x,y,abgr);
@@ -40,9 +41,9 @@ final class RenderArtefato {
         var a=ArtefatoLaCraft.spec(stack);int cor=a==null?0x99bbff:a.cor();
         String json=stack.hasNbt()?stack.getNbt().getString("lacraft_visual"):"";
         var mc=MinecraftClient.getInstance();double t=mc.world==null?0:mc.world.getTime()+mc.getTickDelta();
-        renderVisual(json,cor,mode!=ModelTransformationMode.GUI||ConfigLaCraft.obter().perfilFPS!=0,t,m,buffers,light,overlay);
+        renderVisual(json,cor,mode!=ModelTransformationMode.GUI||ConfigLaCraft.obter().perfilFPS!=0,t,false,m,buffers,light,overlay);
     }
-    static void renderVisual(String json,int cor,boolean anima,double t,MatrixStack m,VertexConsumerProvider buffers,int light,int overlay){
+    static void renderVisual(String json,int cor,boolean anima,double t,boolean andando,MatrixStack m,VertexConsumerProvider buffers,int light,int overlay){
         VisualArtefato visual;
         if(json.isEmpty())visual=MODELOS.computeIfAbsent("legacy"+cor,k->VisualArtefato.legado(cor));
         else try{visual=MODELOS.computeIfAbsent(json,VisualArtefato::ler);}catch(RuntimeException ex){visual=VisualArtefato.legado(cor);}
@@ -51,6 +52,7 @@ final class RenderArtefato {
             float sx=p.sx()/16,sy=p.sy()/16,sz=p.sz()/16;
             m.translate((p.x()+p.sx()/2)/16,(p.y()+p.sy()/2)/16,(p.z()+p.sz()/2)/16);
             if(anima)switch(p.animacao()){
+                case "roda"->{if(andando)m.multiply(RotationAxis.POSITIVE_X.rotation((float)(t*.25)));}
                 case "giro"->m.multiply(RotationAxis.POSITIVE_Y.rotation((float)(t*.08)));
                 case "balanco"->m.multiply(RotationAxis.POSITIVE_Z.rotation((float)Math.sin(t*.09)*.25f));
                 case "flutuar"->m.translate(0,Math.sin(t*.08)*.035,0);

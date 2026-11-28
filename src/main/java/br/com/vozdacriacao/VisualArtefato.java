@@ -20,7 +20,7 @@ record VisualArtefato(List<Peca> pecas){
         for(var e:a){
             JsonObject o=e.getAsJsonObject();String anim=o.has("animacao")?o.get("animacao").getAsString():"fixo";
             String pixels=o.has("pixels")?o.get("pixels").getAsString():LISO;
-            if(!Set.of("fixo","giro","balanco","flutuar","pulsar").contains(anim)||!pixels.matches("[012]{64}"))throw new IllegalArgumentException("Visual: animação ou textura 8x8 inválida");
+            if(!Set.of("fixo","giro","balanco","flutuar","pulsar","roda").contains(anim)||!pixels.matches("[012]{64}|[012]{256}"))throw new IllegalArgumentException("Visual: animação ou textura 8x8 ou 16x16 inválida");
             float x=n(o,"x",0,16),y=n(o,"y",0,16),z=n(o,"z",0,16),sx=n(o,"sx",.25f,16),sy=n(o,"sy",.25f,16),sz=n(o,"sz",.25f,16);
             if(x+sx>16||y+sy>16||z+sz>16)throw new IllegalArgumentException("Visual: peça fora do cubo 16");
             ps.add(new Peca(x,y,z,sx,sy,sz,cor(o,"cor"),o.has("detalhe")?cor(o,"detalhe"):cor(o,"cor"),pixels,anim));

@@ -88,3 +88,6 @@ Entidade procedural própria, textura e animações por peça, dados persistente
 
 ### 0.9.11 experimental — projeto por ambientes
 Novo formato planta2: a IA escolhe retângulos de ambientes, funções e ligações; o motor rejeita interiores sobrepostos, ambientes desconectados, piso superior sem apoio e suítes ausentes quando solicitadas. Até dois andares, escada entre halls alinhados, portas orientadas, entrada dupla e janelas pretas. Piscinas e jardins vinculados ao projeto. Ainda não verifica navegação física completa, decoração realista ou qualidade visual; não é a versão final. Mantém o GameTest de servidor Windows e os testes anteriores.
+
+### 0.9.12 experimental
+Início automático do serviço Ollama já instalado na pasta oficial padrão do Windows, apenas loopback; sem instalação ou download automático de modelos. Entidades/veículos terrestres com dimensões, velocidade e geometria declarativas persistentes, textura de 8x8 ou 16x16 e animação de roda. Colisão horizontal quadrada conservadora, sem suspensão ou voo; não equivale a veículo completo. Novo GameTest de persistência e dimensões. Ainda exige teste gráfico e instalação real. Não é 1.0.0.
