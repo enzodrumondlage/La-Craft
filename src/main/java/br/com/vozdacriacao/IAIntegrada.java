@@ -13,7 +13,7 @@ final class IAIntegrada {
     private static final String ARQUIVO="qwen2.5-1.5b-instruct-q4_k_m.gguf";
     private static final String HASH="6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e";
     private static final long MAX=1_250_000_000L;
-    private static final Path PASTA=FabricLoader.getInstance().getConfigDir().resolve("lacraft-ia");
+    private static final Path PASTA=System.getProperty("lacraft.ia.pastaTeste")!=null?Path.of(System.getProperty("lacraft.ia.pastaTeste")):FabricLoader.getInstance().getConfigDir().resolve("lacraft-ia");
     private static LlamaModel modelo;
     private static String hash(Path p)throws Exception{
         var d=MessageDigest.getInstance("SHA-256");

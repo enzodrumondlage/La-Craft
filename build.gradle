@@ -75,3 +75,10 @@ loom {
         }
     }
 }
+
+tasks.register('testarInferenciaJNI', JavaExec) {
+    dependsOn testClasses
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'br.com.vozdacriacao.TesteInferenciaJNI'
+    systemProperty 'lacraft.ia.pastaTeste', file('build/ia-teste').absolutePath
+}

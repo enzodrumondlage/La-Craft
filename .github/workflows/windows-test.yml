@@ -5,7 +5,7 @@ permissions:
 jobs:
   gametest:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -30,6 +30,11 @@ jobs:
         shell: pwsh
         run: |
           gradle check runGametest --no-daemon
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Inferência real do modelo GGUF via JNI
+        shell: pwsh
+        run: |
+          gradle testarInferenciaJNI --no-daemon
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: always()

@@ -46,3 +46,32 @@ jobs:
           name: La-Craft-Infinite-0.9.13-LEVE
           path: dist/La-Craft-Infinite-0.9.13-LEVE.zip
           if-no-files-found: error
+
+  instalador:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: La-Craft-Infinite-0.9.13-LEVE
+          path: pacote
+      - name: Compilar EXE Windows
+        shell: pwsh
+        run: |
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          & $csc /nologo /target:exe /platform:x64 /optimize+ /out:Instalar-La-Craft-0.9.13-LEVE.exe /reference:System.IO.Compression.dll /reference:System.IO.Compression.FileSystem.dll /reference:System.Web.Extensions.dll /resource:pacote/La-Craft-Infinite-0.9.13-LEVE.zip,modpack.zip installer/Instalador.cs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & .\Instalar-La-Craft-0.9.13-LEVE.exe --verify
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Teste de instalação e backup no Windows
+        shell: pwsh
+        run: |
+          & .\Instalar-La-Craft-0.9.13-LEVE.exe --ci-install
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Instalador-La-Craft-0.9.13-LEVE
+          path: Instalar-La-Craft-0.9.13-LEVE.exe
+          if-no-files-found: error
