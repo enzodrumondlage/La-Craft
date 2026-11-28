@@ -11,6 +11,8 @@
   },
   "mixins": [
     "SpawnDesejoMixin",
-    "SpawnChunkMixin"
+    "SpawnChunkMixin",
+    "DisplayAcesso",
+    "BlocoDisplayAcesso"
   ]
 }

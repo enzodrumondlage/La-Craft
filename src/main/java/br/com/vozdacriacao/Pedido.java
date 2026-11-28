@@ -11,7 +11,7 @@ public record Pedido(String nome,int custo,Tipo tipo,List<Celula> celulas,String
     static Pedido acao(String nome,Tipo tipo,String alvo,int qtd,int duracao){return new Pedido(nome,0,tipo,List.of(),alvo,qtd,duracao);}
     static Pedido sequencia(List<Pedido> acoes){if(acoes.isEmpty()||acoes.size()>8||acoes.stream().anyMatch(a->a.tipo()==Tipo.SEQUENCIA))throw new IllegalArgumentException("Sequência inválida");return new Pedido("Plano combinado",0,Tipo.SEQUENCIA,List.of(),"",1,1,acoes);}
     public Pedido gratuito(){return new Pedido(nome,0,tipo,celulas,alvo,quantidade,escala,acoes);}
-    public enum Tipo { FONTE,CASA,TORRE,FOGUETE,CASTELO,BURROS,CAPIVARA,ARCO,ARMADURA,VOXEL,VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO,RESIDENCIA,TEMPO,CLIMA,CHUVA_ITEM,CHUVA_MOB,SEQUENCIA,CARRO,FENOMENO }
+    public enum Tipo { FONTE,CASA,TORRE,FOGUETE,CASTELO,BURROS,CAPIVARA,ARCO,ARMADURA,VOXEL,VOO,VELOCIDADE,SALTO,INVISIVEL,LASER,ESPADA,ITEM,MOB,ARTEFATO,RESIDENCIA,TEMPO,CLIMA,CHUVA_ITEM,CHUVA_MOB,SEQUENCIA,CARRO,FENOMENO,MODELO }
     static String normal(String s){return Normalizer.normalize(s.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","").trim();}
     static boolean palavra(String s,String p){return Pattern.compile("(?<![a-z0-9_])(?:"+p+")(?![a-z0-9_])").matcher(s).find();}
     public static boolean pedidoChat(String s){

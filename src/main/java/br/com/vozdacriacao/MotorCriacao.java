@@ -51,6 +51,7 @@ public final class MotorCriacao {
     }
     public static Resultado iniciar(ServerPlayerEntity p,Pedido pedido){
         ServerWorld w=p.getServerWorld();
+        if(pedido.tipo()==Pedido.Tipo.MODELO)return new Resultado(ModelosVivos.criar(p,pedido),null);
         if(AcoesMundo.especial(pedido.tipo()))return new Resultado(AcoesMundo.executar(p,pedido),null);
         if(PoderesLaCraft.especial(pedido.tipo()))return new Resultado(PoderesLaCraft.executar(p,pedido),null);
         if(pedido.tipo()==Pedido.Tipo.FONTE){w.spawnParticles(ParticleTypes.END_ROD,p.getX(),p.getY()+1,p.getZ(),70,1,1,1,.12);return new Resultado(true,null);}
@@ -108,7 +109,7 @@ public final class MotorCriacao {
             default -> {return new Resultado(false,null);}
         }
         var v=mapa.entrySet().stream().map(e->new Voxel(e.getKey(),e.getValue())).sorted(Comparator.comparingInt(a->a.pos().getY())).toList();
-        if(v.isEmpty()||v.size()> (residencia?10000:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
+        if(v.isEmpty()||v.size()> (residencia?16000:1500)||v.stream().anyMatch(a->!livre(w,p,a.pos())))return new Resultado(false,null);
         return new Resultado(true,new Obra(w,v,pedido.custo(),residencia));
     }
     private static BlockState estadoResidencia(String b){

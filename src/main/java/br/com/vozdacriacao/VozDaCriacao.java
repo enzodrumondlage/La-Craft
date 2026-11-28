@@ -62,6 +62,7 @@ public final class VozDaCriacao implements ModInitializer {
         ArtefatoLaCraft.registrar();
         PoderesLaCraft.registrar();
         AcoesMundo.registrar();
+        ModelosVivos.registrar();
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());
@@ -75,6 +76,7 @@ public final class VozDaCriacao implements ModInitializer {
                 var p=c.getSource().getPlayerOrThrow();String resultado=CatalogoMods.contexto(termo);
                 for(String linha:resultado.split("\\n"))p.sendMessage(Text.literal(linha.length()>1800?linha.substring(0,1800)+"...":linha),false);return 1;
             })));
+            d.register(literal("lalimparmodelos").executes(c->{var p=c.getSource().getPlayerOrThrow();int n=ModelosVivos.limpar(p);p.sendMessage(Text.literal("Peças dos seus modelos próximas removidas: "+n),false);return n;}));
             d.register(literal("vozteste").executes(c->pedir(c.getSource().getServer(),c.getSource().getPlayerOrThrow(),"fonte")));
             d.register(literal("lacancelar").executes(c->{var p=c.getSource().getPlayerOrThrow();Sessao s=sessao(p);s.pedido=null;s.fila.clear();if(s.obra!=null){MateriaState.obter(c.getSource().getServer()).alterar(p.getUuid(),s.obra.reembolso());s.obra=null;}AcoesMundo.cancelar(p);s.gerando=false;s.geracao++;hud(c.getSource().getServer(),p);return 1;}));
         });
@@ -109,7 +111,7 @@ public final class VozDaCriacao implements ModInitializer {
                 if(p.isAlive()&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&s.obra==null){
                     s.pedido=erro==null?plano:null;
                     if(erro!=null)p.sendMessage(Text.literal("§e"+IAConstrucoes.diagnostico(erro)+" Nenhuma criação substituta foi executada. Para IA gratuita: Mods > La Craft > IA > OLLAMA."),false);
-                    else if(s.pedido!=null)p.sendMessage(Text.literal("§bPlano gerado pela IA: "+s.pedido.nome()),false);
+                    else if(s.pedido!=null)p.sendMessage(Text.literal("§bPlano validado da IA: "+s.pedido.nome()),false);
                     else if(s.pedido==null)p.sendMessage(Text.literal("§ePlano indisponível."),false);
 
                 }

@@ -29,8 +29,9 @@ public final class IAConstrucoes {
         Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
         Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos.
+        Para modelos decorativos originais e animados use {"nome":"nome do objeto pedido","tipo":"modelo","pecas":[{"x":0,"y":0,"z":0,"sx":2,"sy":3,"sz":1,"bloco":"brown_concrete","movimento":"fixo"}]}. Gere 3 a 24 peças com posições x/z -10 a 10, y 0 a 12, tamanhos sx/sy/sz 0.2 a 8. Movimentos fixo, balanco, giro, flutuar. Materiais: concretos branco, preto, cinza, cinza claro, marrom, laranja, amarelo, vermelho, azul, verde, rosa (IDs em inglês), brown_terracotta, terracotta, black_wool, white_wool, brown_wool, glass, iron_block, gold_block, oak_planks, sea_lantern, quartz_block. Cada peça representa um elemento da geometria. Se pedirem um macaco, desenhe cabeça, olhos, corpo, braços, pernas e cauda; nunca burro ou outro animal. Ônibus, moto e avião de construção são modelos decorativos, não mobs.
         Para arquitetura personalizada prefira tipo arquitetura: {"nome":"Casa","tipo":"arquitetura","caixas":[{"x1":-8,"y1":0,"z1":-8,"x2":8,"y2":0,"z2":8,"bloco":"smooth_stone","oco":false}]}.
-        Para arquitetura use até 96 caixas, x/z de -24 a 24, y de 0 a 24, até 10000 blocos. Use caixas de paredes, pisos e telhados separadas, deixando vãos para portas e escadas. Bloco air remove voxels do plano, nunca do mundo. Inclua móveis e iluminação de acordo com o pedido; cama_pe e cama_cabeca devem ser vizinhas no eixo Z, porta_baixo e porta_cima na mesma coluna. Não declare cômodos que não existem. Para desejos não suportados devolva caixas vazias.
+        Para arquitetura use até 96 caixas, x/z de -24 a 24, y de 0 a 48, até 16000 blocos. Use caixas de paredes, pisos e telhados separadas, deixando vãos para portas e escadas. Bloco air remove voxels do plano, nunca do mundo. Inclua móveis e iluminação de acordo com o pedido; cama_pe e cama_cabeca devem ser vizinhas no eixo Z, porta_baixo e porta_cima na mesma coluna. Não declare cômodos que não existem. Para desejos não suportados devolva caixas vazias.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
         """;
@@ -44,8 +45,9 @@ public final class IAConstrucoes {
         final ConfigLaCraft cfg=ConfigLaCraft.obter().copia();
         return CompletableFuture.supplyAsync(()->{
             try{
-                for(int tentativa=0;tentativa<2;tentativa++){
-                String pedidoTexto=tentativa==0?texto:texto+"\nRevise o esquema: devolva um único objeto JSON válido, sem Markdown, com campos e limites corretos.";
+                String motivo="";
+                for(int tentativa=0;tentativa<3;tentativa++){
+                String pedidoTexto=tentativa==0?texto:texto+"\nRevise o esquema: "+motivo+". Retorne JSON válido e preserve o assunto e a categoria.";
                 JsonObject req=new JsonObject();
                 req.addProperty("model",cfg.modelo);req.addProperty("system",SISTEMA+" Blocos: "+String.join(", ",BLOCOS)+"\n"+catalogo+"\nPara itens e mobs de mods, prefira os IDs reais listados; não invente identificadores.");
                 req.addProperty("prompt",pedidoTexto);req.addProperty("stream",false);req.addProperty("format","json");
@@ -69,7 +71,7 @@ public final class IAConstrucoes {
                     byte[] b=in.readNBytes(65537);if(b.length>65536)throw new IllegalArgumentException("Resposta muito grande");
                     JsonObject body=JsonParser.parseString(new String(b,StandardCharsets.UTF_8)).getAsJsonObject();
                     String json=nuvem?body.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString():body.get("response").getAsString();
-                    try{return validar(json);}catch(RuntimeException ex){if(tentativa==1)throw new IllegalArgumentException("Plano inválido após revisão");}
+                    try{Pedido p=validar(json);validarIntencao(texto,catalogo,p);return p;}catch(RuntimeException ex){motivo=ex.getMessage()==null?"campos inválidos":ex.getMessage();if(tentativa==2)throw new IllegalArgumentException("Plano inválido após revisão: "+motivo);}
                 }
                 }
                 throw new IllegalArgumentException("Plano inválido");
@@ -87,7 +89,33 @@ public final class IAConstrucoes {
         if(m.contains("HTTP 5"))return "Serviço de IA indisponível.";
         if(e instanceof java.net.http.HttpTimeoutException)return "A IA demorou demais para responder.";
         if(e instanceof java.io.IOException)return "Não foi possível conectar à IA. Verifique o serviço.";
+        if(m.startsWith("Plano inválido após revisão:"))return m.substring(0,Math.min(190,m.length()))+". Nenhuma matéria consumida.";
         return "A IA retornou um plano inválido mesmo após a revisão. Nenhuma matéria foi consumida.";
+    }
+    static void validarIntencao(String texto,String catalogo,Pedido p){
+        String t=Pedido.normal(texto);
+        if(p.tipo()==Pedido.Tipo.SEQUENCIA){for(Pedido a:p.acoes())validarRegistro(catalogo,a);return;}
+        validarRegistro(catalogo,p);
+        if(Pedido.palavra(t,"macaco|macacos")&&!Pedido.palavra(t,"chuva")){
+            if(p.tipo()==Pedido.Tipo.MOB){
+                if(!p.alvo().matches(".*(?:monkey|macaque|ape|chimp|gorilla|orangutan|macaco).*"))throw new IllegalArgumentException("Macaco não pode ser substituído por outro animal");
+            }else if(p.tipo()!=Pedido.Tipo.MODELO||!Pedido.palavra(Pedido.normal(p.nome()),"macaco|monkey"))throw new IllegalArgumentException("Desenhe um modelo de macaco animado");
+        }
+        if(Pedido.palavra(t,"construcao|construa|estatua|modelo|animado")&&Pedido.palavra(t,"onibus|moto|aviao|macaco")){
+            if(p.tipo()!=Pedido.Tipo.MODELO&&p.tipo()!=Pedido.Tipo.VOXEL&&p.tipo()!=Pedido.Tipo.RESIDENCIA)throw new IllegalArgumentException("O pedido é um modelo ou construção, não um mob/item");
+        }
+        if(Pedido.palavra(t,"onibus")&&p.tipo()==Pedido.Tipo.MOB)throw new IllegalArgumentException("Ônibus não é uma criatura");
+        if(Pedido.palavra(t,"mansao|casa")&&p.tipo()!=Pedido.Tipo.RESIDENCIA&&p.tipo()!=Pedido.Tipo.CASA)throw new IllegalArgumentException("Pedido de casa exige arquitetura");
+        java.util.regex.Matcher h=java.util.regex.Pattern.compile("(\\d+) blocos? de altura").matcher(t);
+        if(h.find()&&p.tipo()==Pedido.Tipo.RESIDENCIA){
+            int altura=p.celulas().stream().mapToInt(Pedido.Celula::y).max().orElse(0)+1;
+            int solicitada=Integer.parseInt(h.group(1));if(Math.abs(altura-solicitada)>1)throw new IllegalArgumentException("Altura solicitada: "+solicitada+"; altura planejada: "+altura);
+        }
+    }
+    private static void validarRegistro(String catalogo,Pedido p){
+        if(p.tipo()==Pedido.Tipo.MOB||p.tipo()==Pedido.Tipo.ITEM||p.tipo()==Pedido.Tipo.CHUVA_MOB||p.tipo()==Pedido.Tipo.CHUVA_ITEM){
+            if(!java.util.regex.Pattern.compile("(?<![a-z0-9_:/.-])"+java.util.regex.Pattern.quote(p.alvo())+"(?![a-z0-9_:/.-])").matcher(catalogo).find())throw new IllegalArgumentException("ID não encontrado no catálogo relevante: "+p.alvo());
+        }
     }
     static Pedido validar(String json){return validar(json,false);}
     private static Pedido validar(String json,boolean filho){
@@ -121,6 +149,7 @@ public final class IAConstrucoes {
                 if(!plano.get("grande").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("grande inválido");
                 return Residencia.planejar(nome,plano.has("quartos")?num(plano,"quartos",1,4):(plano.get("grande").getAsBoolean()?2:1),plano.get("estilo").getAsString(),num(plano,"qualidade",1,4));
             }
+            if(tipo.equals("modelo"))return ModeloSpec.pedido(nome,plano);
             if(tipo.equals("artefato"))return ArtefatoSpec.validar(nome,plano);
             if(tipo.equals("item")||tipo.equals("mob")){
                 Pedido.Tipo t=tipo.equals("item")?Pedido.Tipo.ITEM:Pedido.Tipo.MOB;
@@ -146,7 +175,7 @@ public final class IAConstrucoes {
         Map<Pos,Pedido.Celula> voxels=new LinkedHashMap<>();
         for(JsonElement elemento:caixas){
             JsonObject c=elemento.getAsJsonObject();
-            int r=arquitetura?24:6,h=arquitetura?24:20;
+            int r=arquitetura?24:6,h=arquitetura?48:20;
             int x1=num(c,"x1",-r,r),x2=num(c,"x2",-r,r),z1=num(c,"z1",-r,r),z2=num(c,"z2",-r,r),y1=num(c,"y1",0,h),y2=num(c,"y2",0,h);
             if(x1>x2||y1>y2||z1>z2)throw new IllegalArgumentException("Caixa invertida");
             String bloco=c.get("bloco").getAsString();if(!BLOCOS.contains(bloco)&&!(arquitetura&&Set.of("air","smooth_stone","smooth_quartz","porta_baixo","porta_cima","cama_pe","cama_cabeca","bau","fornalha","crafting_table","cauldron","quartz_stairs","lantern","white_carpet","water","poppy","telhado_leste","telhado_oeste").contains(bloco)))throw new IllegalArgumentException("Bloco proibido");
@@ -155,7 +184,7 @@ public final class IAConstrucoes {
             for(int x=x1;x<=x2;x++)for(int y=y1;y<=y2;y++)for(int z=z1;z<=z2;z++){
                 if(oco&&x>x1&&x<x2&&y>y1&&y<y2&&z>z1&&z<z2)continue;
                 if(bloco.equals("air"))voxels.remove(new Pos(x,y,z));else voxels.put(new Pos(x,y,z),new Pedido.Celula(x,y,z,bloco));
-                if(voxels.size()>(arquitetura?10000:1500))throw new IllegalArgumentException("Limite de voxels");
+                if(voxels.size()>(arquitetura?16000:1500))throw new IllegalArgumentException("Limite de voxels");
             }
         }
         if(voxels.isEmpty())throw new IllegalArgumentException("Plano vazio");
