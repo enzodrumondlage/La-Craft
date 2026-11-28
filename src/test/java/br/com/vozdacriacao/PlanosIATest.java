@@ -45,6 +45,11 @@ public final class PlanosIATest {
         String visual="{\"x\":7,\"y\":0,\"z\":7,\"sx\":2,\"sy\":12,\"sz\":2,\"cor\":\"#805020\",\"animacao\":\"fixo\"}";
         var v=VisualArtefato.ler("["+visual+"]");eq(v.pecas().size(),1);
         try{VisualArtefato.ler("["+visual.replace("\"sy\":12","\"sy\":20")+"]");throw new AssertionError("Visual fora do limite");}catch(IllegalArgumentException esperado){}
+        Pedido chuva=IAConstrucoes.validar("{\"nome\":\"Chuva\",\"tipo\":\"chuva_mista\",\"duracao\":10,\"grupos\":[{\"tipo\":\"mob\",\"id\":\"minecraft:pig\",\"quantidade\":2},{\"tipo\":\"item\",\"id\":\"minecraft:apple\",\"quantidade\":3}]}");
+        eq(chuva.quantidade(),5);var gotas=ChuvaSpec.ler(chuva.alvo());
+        if(!gotas.get(0).mob()||gotas.get(1).mob()||!gotas.get(2).id().equals("minecraft:pig"))throw new AssertionError("Chuva mista");
+        IAConstrucoes.validarIntencao("chuva de porco e maca","Itens: minecraft:apple\nEntidades: minecraft:pig",chuva);
+        try{RequisitosCasa.verificar("4 quartos e 4 banheiros",casa);throw new AssertionError("Casa incompleta");}catch(IllegalArgumentException esperado){}
         System.out.println("Planos IA: testes aprovados");
     }
 }

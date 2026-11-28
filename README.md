@@ -76,3 +76,6 @@ Correção adicional 0.9.6: pedidos simples de cajado/cetro/varinha consultam pr
 
 ### 0.9.7 experimental — artefatos com visual generativo
 O planejador pode definir até 16 cuboides, cores independentes, mapa de pixels 8x8 e animação por peça. O cliente usa renderer dinâmico, texturas geradas em cache limitado, e NBT persiste o projeto. Pedidos originais rejeitam artefatos sem visual na validação principal; itens existentes conservam seus recursos. Novas magias de repulsão e atração de itens e efeitos de status. Não há geração ilimitada de comportamentos ou malhas arbitrárias, nem teste visual dentro do Minecraft. Texturas com cache cheio usam material de fallback; recarga ainda compartilhada pelo tipo de item. 
+
+### 0.9.8 experimental — catálogo e eventos combináveis
+Índice de recursos registrados com traduções pt_br/en_us dos mods e busca por nome exato e termos. Não é um índice de embeddings; não infere poderes de terceiros. Chuva mista declarativa com até 8 grupos/32 aparições alternadas, e fila espera evento ativo. Verificação de marcadores de quartos, banheiros, porta dupla, vidro preto e escadas; não prova a planta inteira nem acessibilidade. Ollama segue externo. Motor de veículos e criaturas universais, texturas avançadas e efeitos de terreno ainda pendentes. Sem teste em cliente.

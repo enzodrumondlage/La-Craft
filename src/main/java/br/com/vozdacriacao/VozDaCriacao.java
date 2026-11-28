@@ -63,6 +63,7 @@ public final class VozDaCriacao implements ModInitializer {
         PoderesLaCraft.registrar();
         AcoesMundo.registrar();
         ModelosVivos.registrar();
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->IndiceRecursos.limpar());
         ServerPlayConnectionEvents.JOIN.register((h,s,server)->hud(server,h.player));
         ServerPlayConnectionEvents.DISCONNECT.register((h,server)->{
             Sessao s=sessoes.remove(h.player.getUuid());
@@ -92,6 +93,8 @@ public final class VozDaCriacao implements ModInitializer {
             s.ultimaObra=null;p.sendMessage(Text.literal("§aÚltima construção removida."),false);return 1;
         }
         if(s.gerando||s.pedido!=null||!s.fila.isEmpty()){p.sendMessage(Text.literal("§eJá existe um pedido ativo; use /lacancelar."),false);return 0;}
+        Pedido existente=IndiceRecursos.exato(texto);
+        if(existente!=null){s.pedido=existente;p.sendMessage(Text.literal("§bRecurso encontrado: "+existente.alvo()),false);hud(server,p);return 1;}
         Pedido equipamento=CatalogoMods.equipamentoSimples(texto);
         if(equipamento!=null){s.pedido=equipamento;p.sendMessage(Text.literal("§bEquipamento encontrado em mod: "+equipamento.alvo()),false);hud(server,p);return 1;}
         if(CatalogoMods.pedeCajadoSimples(texto)){p.sendMessage(Text.literal("§eNenhum cajado ou varinha correspondente encontrado nos mods instalados. Use /lacraftbuscar cajado."),false);return 0;}
@@ -145,9 +148,9 @@ public final class VozDaCriacao implements ModInitializer {
             if(ConfigLaCraft.obter().sugar&&s.ativo&&t<=s.ate&&!p.isSpectator()&&p.getAbilities().allowModifyWorld)sugar(server,p);
             if(s.ativo&&t>s.ate)s.ativo=false;
             var m=MateriaState.obter(server);
-            if(s.pedido==null&&s.obra==null&&!s.fila.isEmpty())s.pedido=s.fila.removeFirst();
+            if(s.pedido==null&&s.obra==null&&!s.fila.isEmpty()&&!AcoesMundo.ocupado(p))s.pedido=s.fila.removeFirst();
             if(s.pedido!=null&&s.pedido.tipo()==Pedido.Tipo.SEQUENCIA){s.fila.addAll(s.pedido.acoes());s.pedido=s.fila.removeFirst();}
-            if(s.pedido!=null&&s.obra==null&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&(!ConfigLaCraft.obter().coletarMateria||m.saldo(p.getUuid())>=s.pedido.custo())){
+            if(s.pedido!=null&&s.obra==null&&!AcoesMundo.ocupado(p)&&!p.isSpectator()&&p.getAbilities().allowModifyWorld&&(!ConfigLaCraft.obter().coletarMateria||m.saldo(p.getUuid())>=s.pedido.custo())){
                 var pedido=s.pedido;s.pedido=null;
                 if(!ConfigLaCraft.obter().coletarMateria)pedido=pedido.gratuito();
                 var resultado=MotorCriacao.iniciar(p,pedido);

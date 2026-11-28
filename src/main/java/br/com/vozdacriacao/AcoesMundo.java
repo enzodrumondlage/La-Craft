@@ -21,8 +21,9 @@ final class AcoesMundo {
         ServerPlayConnectionEvents.DISCONNECT.register((h,s)->eventos.remove(h.player.getUuid()));
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->eventos.clear());
     }
+    static boolean ocupado(ServerPlayerEntity p){return eventos.containsKey(p.getUuid());}
     static void cancelar(ServerPlayerEntity p){eventos.remove(p.getUuid());}
-    static boolean especial(Pedido.Tipo t){return t==Pedido.Tipo.TEMPO||t==Pedido.Tipo.CLIMA||t==Pedido.Tipo.CHUVA_ITEM||t==Pedido.Tipo.CHUVA_MOB||t==Pedido.Tipo.FENOMENO;}
+    static boolean especial(Pedido.Tipo t){return t==Pedido.Tipo.TEMPO||t==Pedido.Tipo.CLIMA||t==Pedido.Tipo.CHUVA_ITEM||t==Pedido.Tipo.CHUVA_MOB||t==Pedido.Tipo.FENOMENO||t==Pedido.Tipo.CHUVA_MISTA;}
     private static boolean autorizado(ServerPlayerEntity p){return p.hasPermissionLevel(2)||p.getServer().isHost(p.getGameProfile());}
     static boolean executar(ServerPlayerEntity p,Pedido a){
         ServerWorld w=p.getServerWorld();
@@ -42,6 +43,15 @@ final class AcoesMundo {
             if(!Set.of("onda","redemoinho","tremor","gravidade","meteoros").contains(a.alvo())||a.escala()<1||a.escala()>30)return false;
             eventos.put(p.getUuid(),new Chuva(w,p.getBlockPos().offset(p.getHorizontalFacing(),10),a,p.getServer().getTicks(),0));return true;
         }
+        if(a.tipo()==Pedido.Tipo.CHUVA_MISTA){
+            var gotas=ChuvaSpec.ler(a.alvo());
+            if(gotas.size()!=a.quantidade()||a.escala()<1||a.escala()>30)return false;
+            for(var g:gotas){
+                var id=new Identifier(g.id());
+                if(g.mob()?(!Registries.ENTITY_TYPE.containsId(id)||!Registries.ENTITY_TYPE.get(id).isSummonable()):(!Registries.ITEM.containsId(id)||!PoderesLaCraft.itemPermitido(id)))return false;
+            }
+            eventos.put(p.getUuid(),new Chuva(w,p.getBlockPos().offset(p.getHorizontalFacing(),6),a,p.getServer().getTicks(),0));return true;
+        }
         Identifier id=Identifier.tryParse(a.alvo());if(id==null||a.quantidade()<1||a.quantidade()>32||a.escala()<1||a.escala()>30)return false;
         if(a.tipo()==Pedido.Tipo.CHUVA_ITEM){
             if(!Registries.ITEM.containsId(id)||!PoderesLaCraft.itemPermitido(id))return false;
@@ -60,11 +70,12 @@ final class AcoesMundo {
             if(a.tipo()==Pedido.Tipo.FENOMENO){
                 Fenomenos.tick(c.mundo(),p,c.centro(),a.alvo(),idade,a.escala());continue;
             }
-            if(c.feitos()>=Math.max(1,(idade*a.quantidade())/(a.escala()*20)))continue;
+            if(c.feitos()>=Math.max(1,((idade+5)*a.quantidade()+a.escala()*20-1)/(a.escala()*20)))continue;
             var w=c.mundo();var r=w.getRandom();BlockPos pos=c.centro().add(r.nextInt(9)-4,10,r.nextInt(9)-4);
             if(w.isOutOfHeightLimit(pos)||!w.isChunkLoaded(pos.getX()>>4,pos.getZ()>>4)||!w.canPlayerModifyAt(p,pos)||!w.getBlockState(pos).isAir())continue;
-            Identifier id=new Identifier(a.alvo());Entity entidade;
-            if(a.tipo()==Pedido.Tipo.CHUVA_ITEM)entidade=new ItemEntity(w,pos.getX()+.5,pos.getY(),pos.getZ()+.5,new ItemStack(Registries.ITEM.get(id)));
+            var gota=a.tipo()==Pedido.Tipo.CHUVA_MISTA?ChuvaSpec.ler(a.alvo()).get(c.feitos()):new ChuvaSpec.Gota(a.tipo()==Pedido.Tipo.CHUVA_MOB,a.alvo());
+            Identifier id=new Identifier(gota.id());Entity entidade;
+            if(!gota.mob())entidade=new ItemEntity(w,pos.getX()+.5,pos.getY(),pos.getZ()+.5,new ItemStack(Registries.ITEM.get(id)));
             else{
                 entidade=Registries.ENTITY_TYPE.get(id).create(w);
                 if(!(entidade instanceof MobEntity mob)){if(entidade!=null)entidade.discard();it.remove();continue;}

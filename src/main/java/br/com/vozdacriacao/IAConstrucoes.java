@@ -25,12 +25,14 @@ public final class IAConstrucoes {
         Para um item mágico combinável use {"nome":"Cristal do oceano","tipo":"artefato","cor":"#33AAFF","efeitos":["respirar","cura","brilho"],"duracao":30,"recarga":5}. Efeitos válidos: cura, respirar, velocidade, salto, invisivel, resistencia, levitacao, brilho, nuvem, musica, visao_noturna, resistencia_fogo, regeneracao, pressa, repulsao (afasta mobs), atracao (atrai itens). Para artefato ORIGINAL sempre adicione campo visual: lista de 3 a 16 peças, exemplo {"x":7,"y":0,"z":7,"sx":2,"sy":11,"sz":2,"cor":"#805020","detalhe":"#E8C060","animacao":"fixo"}. Posicao e tamanho em cubo de 0 a 16; x+sx,y+sy,z+sz <=16. Animacao fixo, giro, balanco, flutuar, pulsar. Campo opcional pixels: string de 64 digitos 0 (cor),1 (detalhe),2 (sombra), mapa 8x8. Desenhe as partes do objeto pedido, por exemplo haste e cristal para cajado, nao apenas um cubo. Combine até 5 efeitos. Duração em segundos 5 a 120, recarga 2 a 30. Para poderes use {"nome":"nome","tipo":"voo"} ou velocidade, salto, invisivel, laser, espada, arco, armadura.
         Para sequência use {"nome":"Plano","tipo":"sequencia","acoes":[{"nome":"Noite","tipo":"tempo","hora":13000},{"nome":"Chuva","tipo":"clima","clima":"chuva","duracao":60}]}; 1 a 8 ações, sem sequências aninhadas.
         Tempo: hora 0 a 23999. Clima: limpo, chuva, tempestade; duração 1 a 3600 segundos. Voo: duracao 1 a 600 segundos (opcional).
+        Para chuva de vários recursos juntos use {"nome":"Chuva mista","tipo":"chuva_mista","duracao":15,"grupos":[{"tipo":"mob","id":"minecraft:pig","quantidade":3},{"tipo":"item","id":"minecraft:diamond","quantidade":4}]}. Até 8 grupos e 32 aparições somadas. Preserve todos os grupos solicitados, não faça sequências de chuvas separadas.
         Para chuva de recursos use {"nome":"Chuva","tipo":"chuva_mob","id":"minecraft:donkey","quantidade":8,"duracao":10} ou chuva_item; quantidade 1 a 32, duração 1 a 30 segundos.
         Para cajado, cetro e varinha, procure staff, stave, scepter, sceptre e wand nos itens reais do catálogo. Retorne tipo item com ID existente; não crie artefato genérico se houver equipamento apropriado. Se pedirem efeitos específicos não comprovados, não os invente. Prefira um item real de outro mod quando ele atende ao pedido; não devolva espada/laser próprios quando houver ID apropriado no catálogo.
         Para casas com ambientes variados use {"nome":"Casa","tipo":"planta","quartos":4,"banheiros":2,"cozinha":true,"sala":true,"garagem":true,"piscina":true,"jardim":true,"estilo":"moderno"}. Até 12 ambientes internos. Nunca confunda banheiros e quartos. Não use o item automobility:automobile sem componentes.
         Para carro montado Automobility use {"nome":"Carro","tipo":"carro","cor":"red"}; cores inglesas padrão. Para fenômeno fictício com movimento de entidades sem alteração de blocos use {"nome":"Tsunami","tipo":"fenomeno","forma":"onda","duracao":10} ou forma redemoinho, tremor, gravidade, meteoros; duração 1 a 30 segundos.
         Para modelos decorativos originais e animados use {"nome":"nome do objeto pedido","tipo":"modelo","pecas":[{"x":0,"y":0,"z":0,"sx":2,"sy":3,"sz":1,"bloco":"brown_concrete","movimento":"fixo"}]}. Gere 3 a 24 peças com posições x/z -10 a 10, y 0 a 12, tamanhos sx/sy/sz 0.2 a 8. Movimentos fixo, balanco, giro, flutuar. Materiais: concretos branco, preto, cinza, cinza claro, marrom, laranja, amarelo, vermelho, azul, verde, rosa (IDs em inglês), brown_terracotta, terracotta, black_wool, white_wool, brown_wool, glass, iron_block, gold_block, oak_planks, sea_lantern, quartz_block. Cada peça representa um elemento da geometria. Se pedirem um macaco, desenhe cabeça, olhos, corpo, braços, pernas e cauda; nunca burro ou outro animal. Ônibus, moto e avião de construção são modelos decorativos, não mobs.
         Para arquitetura personalizada prefira tipo arquitetura: {"nome":"Casa","tipo":"arquitetura","caixas":[{"x1":-8,"y1":0,"z1":-8,"x2":8,"y2":0,"z2":8,"bloco":"smooth_stone","oco":false}]}.
+        Para quartos e banheiros explícitos represente cada quarto com um par cama_pe/cama_cabeca e cada banheiro com um cauldron. Porta dupla exige duas portas adjacentes. Janelas pretas use black_stained_glass. Dois ou mais andares exigem pisos separados e escadas. Não declare contagem sem geometria.
         Para arquitetura use até 96 caixas, x/z de -24 a 24, y de 0 a 48, até 16000 blocos. Use caixas de paredes, pisos e telhados separadas, deixando vãos para portas e escadas. Bloco air remove voxels do plano, nunca do mundo. Inclua móveis e iluminação de acordo com o pedido; cama_pe e cama_cabeca devem ser vizinhas no eixo Z, porta_baixo e porta_cima na mesma coluna. Não declare cômodos que não existem. Para desejos não suportados devolva caixas vazias.
         Não gere comandos, código ou mecanismos reais. Para estruturas use caixas e para desejos não suportados devolva caixas vazias.
         Use exclusivamente os blocos permitidos. Camadas e caixas posteriores substituem voxels anteriores.
@@ -94,7 +96,7 @@ public final class IAConstrucoes {
     }
     static void validarIntencao(String texto,String catalogo,Pedido p){
         String t=Pedido.normal(texto);
-        if(p.tipo()==Pedido.Tipo.SEQUENCIA){for(Pedido a:p.acoes())validarRegistro(catalogo,a);return;}
+        if(p.tipo()==Pedido.Tipo.SEQUENCIA){for(Pedido a:p.acoes()){validarRegistro(catalogo,a);if(a.tipo()==Pedido.Tipo.ARTEFATO&&!a.alvo().contains("|"))throw new IllegalArgumentException("Artefato original precisa de visual");}return;}
         validarRegistro(catalogo,p);
         if(p.tipo()==Pedido.Tipo.ARTEFATO&&!p.alvo().contains("|"))throw new IllegalArgumentException("Artefato original precisa de visual com peças e cores próprias");
         if(Pedido.palavra(t,"macaco|macacos")&&!Pedido.palavra(t,"chuva")){
@@ -107,6 +109,7 @@ public final class IAConstrucoes {
         }
         if(Pedido.palavra(t,"onibus")&&p.tipo()==Pedido.Tipo.MOB)throw new IllegalArgumentException("Ônibus não é uma criatura");
         if(Pedido.palavra(t,"mansao|casa")&&p.tipo()!=Pedido.Tipo.RESIDENCIA&&p.tipo()!=Pedido.Tipo.CASA)throw new IllegalArgumentException("Pedido de casa exige arquitetura");
+        if(p.tipo()==Pedido.Tipo.RESIDENCIA)RequisitosCasa.verificar(t,p);
         java.util.regex.Matcher h=java.util.regex.Pattern.compile("(\\d+) blocos? de altura").matcher(t);
         if(h.find()&&p.tipo()==Pedido.Tipo.RESIDENCIA){
             int altura=p.celulas().stream().mapToInt(Pedido.Celula::y).max().orElse(0)+1;
@@ -114,8 +117,11 @@ public final class IAConstrucoes {
         }
     }
     private static void validarRegistro(String catalogo,Pedido p){
+        if(p.tipo()==Pedido.Tipo.CHUVA_MISTA){for(var g:ChuvaSpec.ler(p.alvo()))validarRegistro(catalogo,new Pedido("Gota",0,g.mob()?Pedido.Tipo.CHUVA_MOB:Pedido.Tipo.CHUVA_ITEM,List.of(),g.id(),1,1));return;}
         if(p.tipo()==Pedido.Tipo.MOB||p.tipo()==Pedido.Tipo.ITEM||p.tipo()==Pedido.Tipo.CHUVA_MOB||p.tipo()==Pedido.Tipo.CHUVA_ITEM){
-            if(!java.util.regex.Pattern.compile("(?<![a-z0-9_:/.-])"+java.util.regex.Pattern.quote(p.alvo())+"(?![a-z0-9_:/.-])").matcher(catalogo).find())throw new IllegalArgumentException("ID não encontrado no catálogo relevante: "+p.alvo());
+            String rotulo=(p.tipo()==Pedido.Tipo.MOB||p.tipo()==Pedido.Tipo.CHUVA_MOB)?"Entidades: ":"Itens: ";
+            String linha=Arrays.stream(catalogo.split("\\n")).filter(l->l.startsWith(rotulo)).findFirst().orElse(catalogo);
+            if(!java.util.regex.Pattern.compile("(?<![a-z0-9_:/.-])"+java.util.regex.Pattern.quote(p.alvo())+"(?![a-z0-9_:/.-])").matcher(linha).find())throw new IllegalArgumentException("ID não encontrado no catálogo relevante: "+p.alvo());
         }
     }
     static Pedido validar(String json){return validar(json,false);}
@@ -138,6 +144,7 @@ public final class IAConstrucoes {
                 String c=plano.get("clima").getAsString();if(!Set.of("limpo","chuva","tempestade").contains(c))throw new IllegalArgumentException("Clima inválido");
                 return Pedido.acao(nome,Pedido.Tipo.CLIMA,c,1,num(plano,"duracao",1,3600));
             }
+            if(tipo.equals("chuva_mista"))return ChuvaSpec.plano(nome,plano);
             if(tipo.equals("chuva_mob")||tipo.equals("chuva_item")){
                 String id=plano.get("id").getAsString();if(!id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")||id.length()>120)throw new IllegalArgumentException("ID inválido");
                 return new Pedido(nome,50,tipo.equals("chuva_mob")?Pedido.Tipo.CHUVA_MOB:Pedido.Tipo.CHUVA_ITEM,List.of(),id,num(plano,"quantidade",1,32),num(plano,"duracao",1,30));
@@ -179,7 +186,7 @@ public final class IAConstrucoes {
             int r=arquitetura?24:6,h=arquitetura?48:20;
             int x1=num(c,"x1",-r,r),x2=num(c,"x2",-r,r),z1=num(c,"z1",-r,r),z2=num(c,"z2",-r,r),y1=num(c,"y1",0,h),y2=num(c,"y2",0,h);
             if(x1>x2||y1>y2||z1>z2)throw new IllegalArgumentException("Caixa invertida");
-            String bloco=c.get("bloco").getAsString();if(!BLOCOS.contains(bloco)&&!(arquitetura&&Set.of("air","smooth_stone","smooth_quartz","porta_baixo","porta_cima","cama_pe","cama_cabeca","bau","fornalha","crafting_table","cauldron","quartz_stairs","lantern","white_carpet","water","poppy","telhado_leste","telhado_oeste").contains(bloco)))throw new IllegalArgumentException("Bloco proibido");
+            String bloco=c.get("bloco").getAsString();if(!BLOCOS.contains(bloco)&&!(arquitetura&&Set.of("air","smooth_stone","smooth_quartz","porta_baixo","porta_cima","cama_pe","cama_cabeca","bau","fornalha","crafting_table","cauldron","quartz_stairs","lantern","white_carpet","black_stained_glass","water","poppy","telhado_leste","telhado_oeste").contains(bloco)))throw new IllegalArgumentException("Bloco proibido");
             if(!c.get("oco").getAsJsonPrimitive().isBoolean())throw new IllegalArgumentException("oco inválido");
             boolean oco=c.get("oco").getAsBoolean();
             for(int x=x1;x<=x2;x++)for(int y=y1;y<=y2;y++)for(int z=z1;z<=z2;z++){

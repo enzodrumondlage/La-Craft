@@ -5,7 +5,7 @@ import java.util.regex.*;
 final class AcoesTexto {
     static String corrigir(String frase){
         String t=Pedido.normal(frase);
-        String[][] pares={{"teremoto|terremotu|terramoto","terremoto"},{"furacau|furacaoo|furacao","furacao"},{"manção|mancao|manssao","mansao"},{"dragau|dragaoo","dragao"},{"giganti","gigante"},{"metioro|metioros|meteoros","meteoros"},{"tsunamy|tsuname","tsunami"},{"aviao","aviao"}};
+        String[][] pares={{"teremoto|terremotu|terramoto","terremoto"},{"furacau|furacaoo|furacao","furacao"},{"manção|mancao|manssao","mansao"},{"dragau|dragaoo","dragao"},{"giganti","gigante"},{"metioro|metioros|meteoros","meteoros"},{"tsunamy|tsuname","tsunami"},{"aviao","aviao"},{"wheater|witer|wihter","wither"},{"onibuz","onibus"}};
         for(String[] p:pares)t=t.replaceAll("(?<![a-z0-9_:/.-])(?:"+p[0]+")(?![a-z0-9_:/.-])",p[1]);
         return t;
     }

@@ -28,21 +28,21 @@ jobs:
         run: gradle build --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: la-craft-0.9.7
-          path: build/libs/la-craft-0.9.7.jar
+          name: la-craft-0.9.8
+          path: build/libs/la-craft-0.9.8.jar
           if-no-files-found: error
       - name: Resolver modpack e dependências
-        run: python3 modpack/montar.py build/libs/la-craft-0.9.7.jar
+        run: python3 modpack/montar.py build/libs/la-craft-0.9.8.jar
       - name: Auditar todos os JARs e dependências internas
-        run: python3 modpack/auditar.py dist/La-Craft-Infinite-0.9.7-LEVE.mrpack
+        run: python3 modpack/auditar.py dist/La-Craft-Infinite-0.9.8-LEVE.mrpack
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Auditoria-La-Craft-0.9.7
+          name: Auditoria-La-Craft-0.9.8
           path: dist/auditoria-jars.json
           if-no-files-found: warn
       - uses: actions/upload-artifact@v4
         with:
-          name: La-Craft-Infinite-0.9.7-LEVE
-          path: dist/La-Craft-Infinite-0.9.7-LEVE.zip
+          name: La-Craft-Infinite-0.9.8-LEVE
+          path: dist/La-Craft-Infinite-0.9.8-LEVE.zip
           if-no-files-found: error

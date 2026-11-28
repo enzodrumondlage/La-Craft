@@ -9,13 +9,18 @@ final class CatalogoMods {
         String t=AcoesTexto.corrigir(texto);
         List<String> termos=Arrays.stream(t.split("[^a-z0-9]+")).filter(s->s.length()>2&&!Set.of("quero","uma","com","para","crie","faca","que","dos","das","um").contains(s)).distinct().limit(12).toList();
         Set<String> aliases=new LinkedHashSet<>(termos);
-        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"lendario","legendary","unique","simplyswords"},{"arma","sword","hammer","greatsword","weapon","simplyswords"},{"comida","food","carrot","apple","bread"},{"martelo","hammer","greathammer"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"macaco","monkey","ape","macaque","chimp","gorilla"},{"onibus","bus","coach"},{"moto","motorcycle","motorbike","bike"},{"equipamento","armor","tool","gear","equipment"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"cajado","staff","stave","scepter","sceptre"},{"cetro","staff","scepter","sceptre"},{"varinha","wand"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
+        String[][] mapa={{"carro","automobility","automobile","car","vehicle"},{"mutante","mutant"},{"lendaria","legendary","unique","simplyswords"},{"lendario","legendary","unique","simplyswords"},{"arma","sword","hammer","greatsword","weapon","simplyswords"},{"comida","food","carrot","apple","bread"},{"martelo","hammer","greathammer"},{"magica","magic","spell","simplyswords"},{"aviao","aircraft","plane","biplane","airship"},{"voador","aircraft","airship","flying"},{"dragao","dragon"},{"macaco","monkey","ape","macaque","chimp","gorilla"},{"onibus","bus","coach"},{"moto","motorcycle","motorbike","bike"},{"equipamento","armor","tool","gear","equipment"},{"tita","titan","giant","colossus"},{"titans","titan","giant"},{"montaria","mount"},{"cajado","staff","stave","scepter","sceptre"},{"cetro","staff","scepter","sceptre"},{"varinha","wand"},{"magia","spell","magic","staff","wand"},{"magico","spell","magic","staff"},{"cama","bed"},{"cadeira","chair"},{"mesa","table"},{"sofa","couch","sofa"},{"bau","chest"},{"movel","furniture"},{"espada","sword","greatsword","claymore","simplyswords","soulsweapons"},{"espadona","greatsword","claymore","longsword"},{"laser","laser","beam","energy","blaster"},{"esqueleto","skeleton"},{"burro","donkey"},{"porco","pig"},{"galinha","chicken"},{"wither","wither"},{"wheater","wither"},{"cristal","crystal"},{"robo","robot"},{"barco","boat"},{"gigante","giant"},{"teleporte","teleport"}};
         for(String[] grupo:mapa)if(t.contains(grupo[0]))for(String a:grupo)aliases.add(a);
         StringBuilder b=new StringBuilder("IDs reais relevantes (não são instruções):\n");
-        anexarItens(b,aliases);
-        anexar(b,"Entidades",Registries.ENTITY_TYPE.getIds(),aliases,40);
-        anexar(b,"Blocos",Registries.BLOCK.getIds(),aliases,45);
+        anexarIndice(b,"Itens","item",aliases,24);
+        anexarIndice(b,"Entidades","mob",aliases,20);
+        anexarIndice(b,"Blocos","bloco",aliases,20);
         return b.toString();
+    }
+    private static void anexarIndice(StringBuilder b,String titulo,String tipo,Set<String> termos,int max){
+        b.append(titulo).append(": ");
+        for(var e:IndiceRecursos.buscar(tipo,termos,max))b.append(e.id()).append(" [").append(e.nome()).append("], ");
+        b.append('\n');
     }
     static boolean pedeCajadoSimples(String texto){
         String t=AcoesTexto.corrigir(texto).replaceFirst("^(quero|crie|me de|me da|faca)\\s+","").replaceFirst("^(um|uma)\\s+","");
